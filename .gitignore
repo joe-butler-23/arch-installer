@@ -1,0 +1,53 @@
+# Archive and work directories
+archiso_work/
+archive-old-approach/
+out/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Test files (keep them local)
+test-config.sh
+test-installer.sh
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SSH keys and sensitive files
+*.key
+*.pem
+id_ed25519
+id_ed25519.pub
+
+# Configuration files with sensitive data
+config/install.yaml
+config/local.yaml
+
+# Backup files
+*.bak
+*.backup
+
+# Cache directories
+.cache/
+__pycache__/
+node_modules/
+
+# Build artifacts
+*.iso
+*.img
+*.tar.gz
+*.tar.xz

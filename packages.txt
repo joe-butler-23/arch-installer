@@ -1,0 +1,19 @@
+# Additional packages for Arch Linux installation
+# One package per line in alphabetical order
+
+apparmor
+btrfs-progs
+cpupower
+doas
+fail2ban
+iwd
+networkmanager
+reflector
+sbctl
+snapper
+stow
+syncthing
+tailscale
+ufw
+zsh
+zram-generator

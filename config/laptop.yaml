@@ -1,0 +1,59 @@
+# Laptop Configuration
+# Optimized for portable devices with power management
+
+# === System Information ===
+disk: /dev/nvme0n1
+hostname: laptop-arch
+username: user
+locale: en_GB.UTF-8
+keyboard_layout: uk
+timezone: Europe/London
+kernel: linux-zen
+
+# === Security Configuration ===
+encryption: true
+secure_boot: true
+
+# === Performance Options (Power-Optimized) ===
+enable_zram: true
+cpu_governor: powersave
+
+# === Network Configuration ===
+enable_tailscale: true
+enable_syncthing: true
+
+# === Security Hardening ===
+enable_firewall: true
+enable_apparmor: true
+enable_fail2ban: true
+
+# === Backup and Snapshots ===
+enable_snapper: true
+auto_updates: true
+btrfs_scrub: true
+enable_reflector: true
+
+# === DNS Configuration ===
+dns_over_tls: true
+dnssec: true
+
+# === Power Management ===
+# Laptop-specific power management
+power_management:
+  enable_tlp: true
+  enable_auto_suspend: true
+  battery_threshold: 80
+
+# === Laptop-Specific Packages ===
+custom_packages:
+  - tlp
+  - acpi
+  - acpilight
+  - lm_sensors
+  - powertop
+
+# === Post-Installation ===
+dotfiles:
+  enabled: true
+  repository: "git@github.com:joe-butler-23/.dotfiles"
+  stowall_script: true

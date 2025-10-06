@@ -1,0 +1,95 @@
+# Desktop Configuration
+# Optimized for desktop/workstation performance
+
+# === System Information ===
+disk: /dev/nvme0n1
+hostname: desktop-arch
+username: user
+locale: en_GB.UTF-8
+keyboard_layout: uk
+timezone: Europe/London
+kernel: linux-zen
+
+# === Security Configuration ===
+encryption: true
+secure_boot: true
+
+# === Performance Options (Performance-Optimized) ===
+enable_zram: true
+cpu_governor: performance
+
+# === Network Configuration ===
+enable_tailscale: true
+enable_syncthing: true
+
+# === Security Hardening ===
+enable_firewall: true
+enable_apparmor: true
+enable_fail2ban: true
+
+# === Backup and Snapshots ===
+enable_snapper: true
+auto_updates: true
+btrfs_scrub: true
+enable_reflector: true
+
+# === DNS Configuration ===
+dns_over_tls: true
+dnssec: true
+
+# === Desktop-Specific Packages ===
+custom_packages:
+  - xorg-server
+  - xorg-xinit
+  - mesa
+  - vulkan-radeon
+  - vulkan-intel
+  - nvidia-dkms  # Uncomment if using NVIDIA
+  - libva-mesa-driver
+  - mesa-vdpau
+
+# === Development Tools ===
+development:
+  enabled: true
+  packages:
+    - git
+    - vim
+    - neovim
+    - docker
+    - code
+    - base-devel
+    - linux-headers
+
+# === Gaming Support ===
+gaming:
+  enabled: true
+  packages:
+    - steam
+    - wine
+    - winetricks
+    - lutris
+    - gamemode
+
+# === Virtualization ===
+virtualization:
+  enabled: true
+  packages:
+    - qemu
+    - libvirt
+    - virt-manager
+    - docker
+    - vagrant
+
+# === Post-Installation ===
+dotfiles:
+  enabled: true
+  repository: "git@github.com:joe-butler-23/.dotfiles"
+  stowall_script: true
+
+# === Desktop Environment ===
+# Uncomment your preferred desktop environment
+desktop_environment:
+  # - gnome
+  # - kde
+  # - xfce4
+  # - i3-wm

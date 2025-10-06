@@ -1,0 +1,43 @@
+# Example Arch Linux Installer Configuration
+# This is a minimal example - copy to config/install.yaml and customize
+
+# Basic system configuration
+disk: /dev/nvme0n1
+hostname: my-arch
+username: myuser
+locale: en_GB.UTF-8
+keyboard_layout: uk
+timezone: Europe/London
+kernel: linux-zen
+
+# Security settings
+encryption: true
+secure_boot: true
+
+# Performance options
+enable_zram: true
+cpu_governor: performance
+
+# Network services
+enable_tailscale: true
+enable_syncthing: true
+
+# Security hardening
+enable_firewall: true
+enable_apparmor: true
+enable_fail2ban: true
+
+# Backup and maintenance
+enable_snapper: true
+auto_updates: true
+btrfs_scrub: true
+enable_reflector: true
+
+# DNS security
+dns_over_tls: true
+dnssec: true
+
+# Post-installation
+dotfiles:
+  enabled: true
+  repository: "git@github.com:yourusername/.dotfiles"

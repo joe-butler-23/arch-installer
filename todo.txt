@@ -1,0 +1,6 @@
+- Part of the packages install should include a .txt file with a list of packages that I can easily add to or amend
+- Need to deal with the hyprland.conf issue whereit automatically updates itself
+- Part of the process will include AI checking the log for the install to see if amends are required
+- CHeck the current approach against requirements from previous implementations and start testing on desktop
+- Can I save stuff like my bluetooth configs?
+- Using yaml config stuff 

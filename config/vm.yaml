@@ -1,0 +1,78 @@
+# Virtual Machine Configuration
+# Optimized for virtual environments
+
+# === System Information ===
+disk: /dev/vda
+hostname: vm-arch
+username: user
+locale: en_GB.UTF-8
+keyboard_layout: uk
+timezone: Europe/London
+kernel: linux
+
+# === Security Configuration ===
+encryption: false  # Often unnecessary for VMs
+secure_boot: false  # Usually not supported in VMs
+
+# === Performance Options (VM-Optimized) ===
+enable_zram: true
+cpu_governor: ondemand
+
+# === Network Configuration ===
+enable_tailscale: false  # Often redundant with host networking
+enable_syncthing: false  # Usually not needed in VMs
+
+# === Security Hardening ===
+enable_firewall: true
+enable_apparmor: true
+enable_fail2ban: true
+
+# === Backup and Snapshots ===
+enable_snapper: false  # VM snapshots are usually preferred
+auto_updates: true
+btrfs_scrub: false  # Not needed for VMs
+enable_reflector: true
+
+# === DNS Configuration ===
+dns_over_tls: true
+dnssec: true
+
+# === VM-Specific Packages ===
+custom_packages:
+  - qemu-guest-agent
+  - open-vm-tools  # For VMware
+  - spice-vdagent  # For QEMU/KVM
+  - xf86-video-vmware
+  - xf86-video-vboxvideo
+
+# === VM Optimizations ===
+vm_optimizations:
+  enable_guest_services: true
+  disable_unnecessary_services: true
+  optimize_disk_performance: true
+
+# === Development Tools ===
+development:
+  enabled: true
+  packages:
+    - git
+    - vim
+    - neovim
+    - docker
+    - base-devel
+    - linux-headers
+
+# === Post-Installation ===
+dotfiles:
+  enabled: true
+  repository: "git@github.com:joe-butler-23/.dotfiles"
+  stowall_script: true
+
+# === SSH Configuration ===
+ssh:
+  disable_root_login: true
+  enable_password_auth: true
+  enable_pubkey_auth: true
+  port: 22
+  max_auth_tries: 3
+  client_alive_interval: 300
