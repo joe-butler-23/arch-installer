@@ -1,4 +1,4 @@
-# 🧱 Arch Installer — Modular, Reproducible, Secure
+# 🧱 Arch Installer
 
 A modular, reproducible Arch Linux installation system.
 
