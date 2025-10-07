@@ -10,17 +10,21 @@ run_postinstall() {
     fi
   " || warn "Dotfiles clone skipped - configure SSH keys and clone manually if needed"
 
-  # Alternative stowall if stowall.sh not available but individual stow packages exist
-  run_cmd "arch-chroot /mnt bash -c '
-    if [ ! -x /home/${username}/.dotfiles/stowall.sh ] && [ -d /home/${username}/.dotfiles ]; then
-      cd /home/${username}/.dotfiles
-      for dir in */; do
-        if [ -d "$dir" ]; then
-          sudo -u ${username} stow --target=/home/${username} "$dir"
+  # Run stowall if available
+  if arch-chroot /mnt test -x /home/${username}/.dotfiles/stowall.sh; then
+    info "Running stowall.sh"
+    arch-chroot /mnt bash -c "cd /home/${username}/.dotfiles && sudo -u ${username} ./stowall.sh" || warn "stowall.sh failed"
+  elif arch-chroot /mnt test -d /home/${username}/.dotfiles; then
+    info "Running manual stow on dotfiles"
+    arch-chroot /mnt bash -c "
+      cd /home/${username}/.dotfiles || exit 0
+      for d in */; do
+        if [ -d \"\$d\" ]; then
+          sudo -u ${username} stow --target=/home/${username} \"\${d%/}\" 2>/dev/null || true
         fi
       done
-    fi
-  '"
+    " || warn "Manual stow failed"
+  fi
 
   # Copy verification script to user home if it exists
   if [[ -f verify.sh ]]; then
