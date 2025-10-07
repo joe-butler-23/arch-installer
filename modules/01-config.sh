@@ -61,10 +61,22 @@ load_config() {
 prompt_password() {
     local var="$1"
     local prompt="$2"
+    local password1
+    local password2
     
-    read -rsp "$prompt: " input
-    echo
-    export "$var"="$input"
+    while true; do
+        read -rsp "$prompt: " password1
+        echo
+        read -rsp "$prompt (confirm): " password2
+        echo
+        
+        if [[ "$password1" == "$password2" ]]; then
+            export "$var"="$password1"
+            break
+        else
+            error "Passwords do not match. Please try again."
+        fi
+    done
 }
 
 # Validate configuration
