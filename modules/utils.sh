@@ -12,26 +12,29 @@ run_cmd() {
   local cmd="$*"
   local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
   
+  # Use PROJECT_LOG if available, otherwise create a default
+  local project_log="${PROJECT_LOG:-logs/arch-installer-$(date +%Y%m%d_%H%M%S).log}"
+  
   if $DRYRUN; then
     local msg="$timestamp - [DRYRUN] $cmd"
     echo -e "${YELLOW}[DRYRUN]${RESET} $cmd"
     echo "$msg" >> "${LOGFILE:-/var/log/arch-installer.log}" 2>/dev/null || true
-    echo "$msg" >> "logs/arch-installer-"*".log" 2>/dev/null || true
+    echo "$msg" >> "$project_log" 2>/dev/null || true
   else
     local msg="$timestamp - [CMD] $cmd"
     echo "$msg" >> "${LOGFILE:-/var/log/arch-installer.log}" 2>/dev/null || true
-    echo "$msg" >> "logs/arch-installer-"*".log" 2>/dev/null || true
+    echo "$msg" >> "$project_log" 2>/dev/null || true
     
     # Execute the command and capture output
     if eval "$cmd"; then
       local success_msg="$timestamp - [SUCCESS] Command completed: $cmd"
       echo "$success_msg" >> "${LOGFILE:-/var/log/arch-installer.log}" 2>/dev/null || true
-      echo "$success_msg" >> "logs/arch-installer-"*".log" 2>/dev/null || true
+      echo "$success_msg" >> "$project_log" 2>/dev/null || true
     else
       local exit_code=$?
       local error_msg="$timestamp - [ERROR] Command failed (exit code $exit_code): $cmd"
       echo "$error_msg" >> "${LOGFILE:-/var/log/arch-installer.log}" 2>/dev/null || true
-      echo "$error_msg" >> "logs/arch-installer-"*".log" 2>/dev/null || true
+      echo "$error_msg" >> "$project_log" 2>/dev/null || true
       return $exit_code
     fi
   fi
