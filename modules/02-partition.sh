@@ -4,14 +4,39 @@ run_partition() {
   info "=== Disk Partitioning & Encryption ==="
   [[ -b "$disk" ]] || die "Disk $disk not found."
 
+  # Cleanup any existing mounts and LUKS volumes
+  info "Cleaning up existing mounts and LUKS volumes"
+  
+  # Unmount all partitions from the target disk
+  if mount | grep -q "$disk"; then
+    info "Unmounting partitions from $disk"
+    mount | grep "$disk" | awk '{print $1}' | xargs -r umount -R 2>/dev/null || true
+  fi
+  
+  # Close any existing LUKS containers
+  if [[ -e /dev/mapper/cryptroot ]]; then
+    info "Closing existing LUKS container"
+    cryptsetup close cryptroot 2>/dev/null || true
+  fi
+  
+  # Swapoff any swap on the disk
+  swapoff -a 2>/dev/null || true
+  
+  # Wait a moment for the kernel to release resources
+  sleep 2
+
   # Wipe & create GPT
+  info "Wiping disk and creating new partition table"
   run_cmd "wipefs -af $disk"
   run_cmd "sgdisk -Zo $disk"
   run_cmd "parted -s $disk mklabel gpt \
     mkpart ESP fat32 1MiB 1GiB set 1 esp on \
     mkpart CRYPTROOT 1GiB 100%"
 
+  # Refresh partition table
+  run_cmd "partprobe $disk"
   sleep 2
+  
   ESP="${disk}p1"
   CRYPTROOT="${disk}p2"
 
