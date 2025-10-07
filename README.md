@@ -112,29 +112,16 @@ Look for your IP address (e.g., `192.168.0.190` under `wlan0` or `eth0`).
 From your **laptop/another computer**:
 
 ```
-ssh root@192.168.0.190
+ssh root@192.168.x.xxx
 ```
 
-Replace `192.168.0.190` with your target machine's IP.
+Replace `192.168.x.xxx` with the target machine's IP.
 
 ---
 
-## 📥 Step 4: Clone the Installer
-
-On the **target machine** (via SSH):
-
-```
-# Install git
-pacman -Sy git
-
-# Clone the installer
-git clone https://github.com/joe-butler-23/arch-installer.git
-cd arch-installer
-```
-
 ---
 
-## ⚙️ Step 5: Configure Installation
+## ⚙️ Step 4: Configure Installation
 
 The installer uses a YAML configuration file. For a desktop installation with Hyprland:
 
@@ -153,8 +140,12 @@ The configuration includes:
 
 ---
 
-## 🚀 Step 6: Run the Installation
+## 🚀 Step 5: Run the Installation
 
+```
+# Run the bootstrap
+sudo bash bootstrap.sh
+```
 ```
 # Run the installer
 sudo bash install.sh --config config/desktop.yaml
