@@ -19,6 +19,7 @@ run_users() {
   info "Configuring sudo and doas"
   run_cmd "echo 'permit persist :wheel' > /mnt/etc/doas.conf"
   run_cmd "chmod 0400 /mnt/etc/doas.conf"
+  run_cmd "mkdir -p /mnt/etc/sudoers.d"
   run_cmd "echo '%wheel ALL=(ALL:ALL) ALL' > /mnt/etc/sudoers.d/wheel"
 
   # SSH hardening

@@ -6,7 +6,7 @@ run_base_install() {
   microcode="intel-ucode"
   grep -q AuthenticAMD /proc/cpuinfo && microcode="amd-ucode"
 
-  PKGS="base ${kernel:-linux} $microcode linux-firmware btrfs-progs efibootmgr snapper"
+  PKGS="base ${kernel:-linux} $microcode linux-firmware btrfs-progs efibootmgr snapper zsh sudo opendoas"
   info "Installing base packages: $PKGS"
   run_cmd "pacstrap -K /mnt $PKGS"
 
