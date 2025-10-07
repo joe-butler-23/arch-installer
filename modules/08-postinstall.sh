@@ -30,7 +30,7 @@ run_postinstall() {
   if [[ -f verify.sh ]]; then
     run_cmd "cp verify.sh /mnt/home/${username}/verify.sh"
     run_cmd "chmod +x /mnt/home/${username}/verify.sh"
-    run_cmd "chown ${username}:${username} /mnt/home/${username}/verify.sh"
+    run_cmd "arch-chroot /mnt chown ${username}:${username} /home/${username}/verify.sh"
   else
     warn "verify.sh not found in current directory, skipping copy"
   fi
@@ -57,7 +57,7 @@ Services enabled:
 - DNS-over-TLS and DNSSEC
 - CPU power management
 EOF
-  run_cmd "chown ${username}:${username} /mnt/home/${username}/README.txt"
+  run_cmd "arch-chroot /mnt chown ${username}:${username} /home/${username}/README.txt"
 
   # Generate installation summary
   info "=== Installation Summary ==="
@@ -118,7 +118,7 @@ Verification: ~/verify.sh
 5. Configure Syncthing via web interface
 EOF
 
-  run_cmd "chown ${username}:${username} /mnt/home/${username}/installation-summary.txt"
+  run_cmd "arch-chroot /mnt chown ${username}:${username} /home/${username}/installation-summary.txt"
 
   info "✅ Post-install complete — system ready to reboot."
   info "✅ Dotfiles stowed successfully"
