@@ -9,12 +9,32 @@ for m in modules/utils.sh modules/00-*.sh modules/01-*.sh; do
   source "$m"
 done
 
-# Load configuration from YAML (or use defaults)
-CONFIG_FILE="${1:-config/desktop.yaml}"
+# Parse arguments
+CONFIG_FILE="config/desktop.yaml"
+START_MODULE="04"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --config)
+      CONFIG_FILE="$2"
+      shift 2
+      ;;
+    --start)
+      START_MODULE="$2"
+      shift 2
+      ;;
+    *)
+      CONFIG_FILE="$1"
+      shift
+      ;;
+  esac
+done
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
   echo "Error: Configuration file not found: $CONFIG_FILE"
-  echo "Usage: $0 [config-file]"
+  echo "Usage: $0 [--config <config-file>] [--start <module-number>]"
+  echo "  --config: Path to configuration file (default: config/desktop.yaml)"
+  echo "  --start:  Starting module number: 04-08 (default: 04)"
   exit 1
 fi
 
@@ -34,8 +54,9 @@ if ! mountpoint -q /mnt; then
   die "/mnt is not mounted. Cannot continue installation."
 fi
 
-echo "=== Continuing Arch Installation from Chroot Setup ==="
+echo "=== Continuing Arch Installation ==="
 echo "Configuration: $CONFIG_FILE"
+echo "Starting from module: $START_MODULE"
 echo "Disk: ${disk}"
 echo "Kernel: ${kernel}"
 echo "Hostname: ${hostname}"
@@ -60,21 +81,32 @@ for m in modules/04-*.sh modules/05-*.sh modules/06-*.sh modules/07-*.sh modules
   fi
 done
 
-# Run the installation phases
-info "=== Starting from Module 04: Chroot Setup ==="
-run_chroot_setup
-
-info "=== Module 05: Users and Permissions ==="
-run_users
-
-info "=== Module 06: Network Configuration ==="
-run_network
-
-info "=== Module 07: Services ==="
-run_services
-
-info "=== Module 08: Post-Installation ==="
-run_postinstall
+# Run the installation phases based on starting module
+case "$START_MODULE" in
+  04)
+    info "=== Starting from Module 04: Chroot Setup ==="
+    run_chroot_setup
+    ;&  # Fall through to next case
+  05)
+    info "=== Module 05: Users and Permissions ==="
+    run_users
+    ;&  # Fall through to next case
+  06)
+    info "=== Module 06: Network Configuration ==="
+    run_network
+    ;&  # Fall through to next case
+  07)
+    info "=== Module 07: Services ==="
+    run_services
+    ;&  # Fall through to next case
+  08)
+    info "=== Module 08: Post-Installation ==="
+    run_postinstall
+    ;;
+  *)
+    die "Invalid start module: $START_MODULE. Must be 04-08."
+    ;;
+esac
 
 info ""
 info "✅ Installation continuation complete!"

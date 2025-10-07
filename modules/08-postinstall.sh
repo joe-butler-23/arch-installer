@@ -3,22 +3,12 @@
 run_postinstall() {
   info "=== Post-Install Tasks ==="
 
-  # Install stow for dotfiles management
-  run_cmd "arch-chroot /mnt pacman -S --needed --noconfirm stow"
-
-  # Clone dotfiles if not already present
-  run_cmd "arch-chroot /mnt bash -c '
+  # Clone dotfiles if not already present (may fail without SSH keys configured)
+  arch-chroot /mnt bash -c "
     if [ ! -d /home/${username}/.dotfiles ]; then
-      sudo -u ${username} git clone git@github.com:joe-butler-23/.dotfiles /home/${username}/.dotfiles
+      sudo -u ${username} git clone git@github.com:joe-butler-23/.dotfiles /home/${username}/.dotfiles 2>/dev/null
     fi
-  '"
-
-  # Run stowall if available
-  run_cmd "arch-chroot /mnt bash -c '
-    if [ -x /home/${username}/.dotfiles/stowall.sh ]; then
-      cd /home/${username}/.dotfiles && sudo -u ${username} ./stowall.sh
-    fi
-  '"
+  " || warn "Dotfiles clone skipped - configure SSH keys and clone manually if needed"
 
   # Alternative stowall if stowall.sh not available but individual stow packages exist
   run_cmd "arch-chroot /mnt bash -c '
@@ -32,10 +22,14 @@ run_postinstall() {
     fi
   '"
 
-  # Copy verification script to user home
-  run_cmd "cp /mnt/arch-installer/verify.sh /mnt/home/${username}/verify.sh"
-  run_cmd "chmod +x /mnt/home/${username}/verify.sh"
-  run_cmd "chown ${username}:${username} /mnt/home/${username}/verify.sh"
+  # Copy verification script to user home if it exists
+  if [[ -f verify.sh ]]; then
+    run_cmd "cp verify.sh /mnt/home/${username}/verify.sh"
+    run_cmd "chmod +x /mnt/home/${username}/verify.sh"
+    run_cmd "chown ${username}:${username} /mnt/home/${username}/verify.sh"
+  else
+    warn "verify.sh not found in current directory, skipping copy"
+  fi
 
   # Write README + verification helper
   cat > /mnt/home/${username}/README.txt <<EOF
@@ -71,7 +65,7 @@ EOF
   info "Log files available at:"
   info "  - System log: ${LOGFILE:-/mnt/var/log/arch-installer.log}"
   info "  - Project log: $PROJECT_LOG"
-  info "  - User home: /home/${USERNAME}/verify.sh"
+  info "  - User home: /home/${username}/verify.sh"
 
   # Create installation summary file
   cat > /mnt/home/${username}/installation-summary.txt <<EOF
