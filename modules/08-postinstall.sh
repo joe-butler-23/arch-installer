@@ -62,20 +62,33 @@ EOF
   # Generate installation summary
   info "=== Installation Summary ==="
   local install_time=$(date '+%Y-%m-%d %H:%M:%S')
-  local total_time=$(($(date +%s) - $(grep "=== Arch Installer Preflight ===" "${LOGFILE:-/mnt/var/log/arch-installer.log}" | head -1 | cut -d' ' -f1 | xargs -I{} date -d "{}" +%s 2>/dev/null || echo 0)))
+  
+  # Calculate total time if log file exists
+  local total_time="N/A"
+  if [[ -f "${LOGFILE:-/mnt/var/log/arch-installer.log}" ]]; then
+    local start_time=$(grep "=== Arch Installer Preflight ===" "${LOGFILE}" | head -1 | cut -d' ' -f1 2>/dev/null)
+    if [[ -n "$start_time" ]]; then
+      total_time=$(($(date +%s) - $(date -d "$start_time" +%s 2>/dev/null || echo 0)))
+      total_time="${total_time} seconds"
+    fi
+  fi
   
   info "Installation completed at: $install_time"
-  info "Total installation time: ${total_time} seconds"
+  info "Total installation time: ${total_time}"
   info "Log files available at:"
-  info "  - System log: ${LOGFILE:-/mnt/var/log/arch-installer.log}"
-  info "  - Project log: $PROJECT_LOG"
+  if [[ -n "${LOGFILE:-}" && -f "${LOGFILE}" ]]; then
+    info "  - System log: ${LOGFILE}"
+  fi
+  if [[ -n "${PROJECT_LOG:-}" && -f "${PROJECT_LOG}" ]]; then
+    info "  - Project log: ${PROJECT_LOG}"
+  fi
   info "  - User home: /home/${username}/verify.sh"
 
   # Create installation summary file
   cat > /mnt/home/${username}/installation-summary.txt <<EOF
 === Arch Linux Installation Summary ===
 Date: $install_time
-Total time: ${total_time} seconds
+Total time: ${total_time}
 User: ${username}
 Shell: zsh
 Hostname: ${hostname:-archlinux}
