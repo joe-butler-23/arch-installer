@@ -6,8 +6,20 @@ run_base_install() {
   microcode="intel-ucode"
   grep -q AuthenticAMD /proc/cpuinfo && microcode="amd-ucode"
 
-  PKGS="base ${kernel:-linux} $microcode linux-firmware btrfs-progs efibootmgr snapper zsh sudo opendoas openssh iwd git tailscale syncthing stow"
-  info "Installing base packages: $PKGS"
+  # Core packages that must be installed
+  CORE_PKGS="base ${kernel:-linux} $microcode linux-firmware efibootmgr sudo openssh git"
+  
+  # Load additional packages from packages.txt if it exists
+  EXTRA_PKGS=""
+  if [[ -f packages.txt ]]; then
+    info "Loading additional packages from packages.txt"
+    # Read packages.txt, skip comments and empty lines
+    EXTRA_PKGS=$(grep -v '^#' packages.txt | grep -v '^$' | tr '\n' ' ')
+    info "Found $(echo $EXTRA_PKGS | wc -w) additional packages"
+  fi
+  
+  PKGS="$CORE_PKGS $EXTRA_PKGS"
+  info "Installing packages..."
   run_cmd "pacstrap -K /mnt $PKGS"
 
   info "Generating fstab"
