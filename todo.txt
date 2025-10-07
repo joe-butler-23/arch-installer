@@ -6,4 +6,18 @@
 - I need to add installing git to the bootstrap.sh file 
 - Add note to readme that i need to add the new install's SSH key. Or alternatviely i think  can install gh cli tool and do it all as part of the bootsrap script
 - Right now it gets up to script 4 and then stops. There should be an option to ensure it run
-- Currently my zshrc is not properly symlinked, and i should also ensure zshenv and zprofile are properly set up 
+- Currently my zshrc is not properly symlinked, and i should also ensure zshenv and zprofile are properly set up
+- As soon as possible I need to run '- sudo ufw allow ssh' to allow the ssh connection to continue otherwise the firewall blocks it. WHere would we add this? how do we avoid this being an issue?
+- Make sure yay is installed as part of the script 
+
+## Post-install tasks for desktop setup
+- [ ] Enable SSH service on fresh desktop (sudo systemctl enable sshd && sudo systemctl start sshd)
+- [ ] Configure firewall to allow SSH (sudo ufw allow ssh)
+- [ ] Copy packages.txt to desktop (scp packages.txt joebutler@192.168.0.186:~/)
+- [ ] Install packages from packages.txt on desktop
+- [ ] Copy dotfiles from laptop to desktop (scp -r ~/.dotfiles joebutler@192.168.0.186:~/)
+- [ ] Run stowall to configure dotfiles on desktop
+- [ ] Verify installation and test desktop environment
+- [ ] Update README with SSH troubleshooting notes
+- [ ] Document the need to configure SSH port if non-standard
+- [ ] Add section on manual post-install steps for packages and dotfiles

@@ -373,6 +373,96 @@ Or add them to `packages.txt` and reinstall.
 
 ---
 
+## 🔌 SSH Connection Troubleshooting
+
+### SSH Authentication Failures
+
+If you encounter "Too many authentication failures" when connecting:
+
+```
+# Clear old SSH host keys
+ssh-keygen -R <IP_ADDRESS>
+
+# Connect with password-only authentication
+ssh -o IdentitiesOnly=yes -o PreferredAuthentications=password user@<IP_ADDRESS>
+
+# If SSH is on non-standard port
+ssh -p <PORT> -o IdentitiesOnly=yes user@<IP_ADDRESS>
+```
+
+### SSH Service Not Running
+
+After reboot, SSH may not be enabled:
+
+```
+# On the target machine (via direct console access)
+sudo systemctl enable sshd
+sudo systemctl start sshd
+
+# Allow SSH through firewall
+sudo ufw allow ssh
+
+# Check SSH status
+sudo systemctl status sshd
+```
+
+### SSH Port Configuration
+
+If SSH is configured on a non-standard port (e.g., port 24):
+
+```
+# Connect with specific port
+ssh -p 24 user@<IP_ADDRESS>
+
+# Copy files with specific port
+scp -P 24 file.txt user@<IP_ADDRESS>:~/
+```
+
+---
+
+## 📦 Manual Post-Install Steps
+
+If the automatic package installation or dotfiles cloning failed during the main installation, complete these steps manually:
+
+### Install Missing Packages
+
+```
+# Download packages.txt to the target machine
+curl -O https://raw.githubusercontent.com/joe-butler-23/arch-installer/main/packages.txt
+
+# Install all packages
+sudo pacman -S --needed $(grep -v '^#' packages.txt | grep -v '^$' | tr '\n' ' ')
+```
+
+### Copy Dotfiles from Another Machine
+
+```
+# From your laptop/another computer
+scp -r ~/.dotfiles user@<IP_ADDRESS>:~/
+
+# Or clone from GitHub (if public or SSH keys configured)
+git clone https://github.com/joe-butler-23/.dotfiles ~/.dotfiles
+cd ~/.dotfiles
+./stowall.sh
+```
+
+### Configure Desktop Environment
+
+```
+# Ensure Hyprland starts on TTY1
+cat > ~/.zprofile << 'EOF'
+# Auto-start Hyprland on TTY1
+if [ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+    exec Hyprland
+fi
+EOF
+
+# Start Hyprland immediately or reboot
+Hyprland
+```
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Hyprland Doesn't Start
@@ -395,7 +485,7 @@ Hyprland
 ls -la ~/.dotfiles
 
 # If not, clone them
-git clone git@github.com:joe-butler-23/.dotfiles ~/.dotfiles
+git clone git@github.com/joe-butler-23/.dotfiles ~/.dotfiles
 cd ~/.dotfiles
 ./stowall.sh
 ```
