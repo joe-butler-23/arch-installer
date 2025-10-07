@@ -55,5 +55,5 @@ custom_packages:
 # === Post-Installation ===
 dotfiles:
   enabled: true
-  repository: "git@github.com:joe-butler-23/.dotfiles"
+  repository: "https://github.com/joe-butler-23/.dotfiles"
   stowall_script: true

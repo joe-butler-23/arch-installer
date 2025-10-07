@@ -3,4 +3,7 @@
 - Part of the process will include AI checking the log for the install to see if amends are required
 - CHeck the current approach against requirements from previous implementations and start testing on desktop
 - Can I save stuff like my bluetooth configs?
-- Using yaml config stuff 
+- I need to add installing git to the bootstrap.sh file 
+- Add note to readme that i need to add the new install's SSH key. Or alternatviely i think  can install gh cli tool and do it all as part of the bootsrap script
+- Right now it gets up to script 4 and then stops. There should be an option to ensure it run
+- Currently my zshrc is not properly symlinked, and i should also ensure zshenv and zprofile are properly set up 

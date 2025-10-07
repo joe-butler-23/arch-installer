@@ -21,4 +21,4 @@ enable_reflector: true
 dns_over_tls: true
 dnssec: true
 dotfiles_enabled: true
-dotfiles_repository: git@github.com:joe-butler-23/.dotfiles
+dotfiles_repository: https://github.com/joe-butler-23/.dotfiles
