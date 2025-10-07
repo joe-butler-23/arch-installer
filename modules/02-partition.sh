@@ -29,13 +29,21 @@ run_partition() {
   info "Wiping disk and creating new partition table"
   run_cmd "wipefs -af $disk"
   run_cmd "sgdisk -Zo $disk"
+  
+  # Force kernel to reread partition table after wiping
+  run_cmd "partprobe $disk"
+  run_cmd "blockdev --rereadpt $disk"
+  sleep 3
+  
+  # Now create new partitions
   run_cmd "parted -s $disk mklabel gpt \
     mkpart ESP fat32 1MiB 1GiB set 1 esp on \
     mkpart CRYPTROOT 1GiB 100%"
 
-  # Refresh partition table
+  # Refresh partition table again
   run_cmd "partprobe $disk"
-  sleep 2
+  run_cmd "blockdev --rereadpt $disk"
+  sleep 3
   
   ESP="${disk}p1"
   CRYPTROOT="${disk}p2"
