@@ -40,25 +40,31 @@ run_partition() {
   # Wait for the kernel to release resources
   sleep 3
 
-  # Wipe & create GPT
-  info "Wiping disk and creating new partition table"
+  # Wipe disk
+  info "Wiping disk"
   run_cmd "wipefs -af $disk"
   run_cmd "sgdisk -Zo $disk"
+  sleep 2
   
-  # Force kernel to reread partition table after wiping
-  run_cmd "partprobe $disk"
-  run_cmd "blockdev --rereadpt $disk"
-  sleep 3
-  
-  # Now create new partitions
+  # Create new partition table and partitions
+  info "Creating new partition table"
   run_cmd "parted -s $disk mklabel gpt \
     mkpart ESP fat32 1MiB 1GiB set 1 esp on \
     mkpart CRYPTROOT 1GiB 100%"
 
-  # Refresh partition table again
-  run_cmd "partprobe $disk"
-  run_cmd "blockdev --rereadpt $disk"
-  sleep 3
+  # NOW force kernel to reread the NEW partition table
+  info "Refreshing partition table"
+  partprobe "$disk" 2>/dev/null || true
+  blockdev --rereadpt "$disk" 2>/dev/null || true
+  
+  # Wait for partition devices to appear
+  sleep 2
+  for i in {1..10}; do
+    if [[ -b "${disk}p1" && -b "${disk}p2" ]]; then
+      break
+    fi
+    sleep 1
+  done
   
   ESP="${disk}p1"
   CRYPTROOT="${disk}p2"
