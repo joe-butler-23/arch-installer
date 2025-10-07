@@ -1,229 +1,458 @@
-# 🧱 Arch Installer
+# 🚀 Arch Linux Installer
 
-A modular, reproducible Arch Linux installation system.
-
----
-
-## Overview
-
-This project automates a complete Arch install with modern, secure defaults:
-
-- **LUKS2** full-disk encryption  
-- **Btrfs** with subvolumes & compression  
-- **systemd-boot + UKI** (Unified Kernel Images)  
-- **Automatic snapshots** via Snapper  
-- **AppArmor**, **UFW**, and **Fail2ban**  
-- **Post-install dotfile stow**  
-- **Logging**, **dry-run**, and **YAML preseed support**  
+A complete, modular Arch Linux installation system with full-disk encryption, Btrfs, Hyprland desktop, and modern security features.
 
 ---
 
-## 🧩 Project Structure
+## ✨ What Gets Installed
+
+### Core System
+
+*   🔐 **LUKS2 full-disk encryption** with Argon2id
+*   📦 **Btrfs filesystem** with optimised subvolumes and compression
+*   🥾 **systemd-boot** bootloader with Unified Kernel Images (UKI)
+*   🔒 **Secure Boot** ready (sbctl)
+*   📸 **Snapper** automatic snapshots for root and home
+
+### Desktop Environment
+
+*   🪟 **Hyprland** Wayland compositor
+*   📊 **Waybar** status bar
+*   🚀 **Kitty** terminal emulator
+*   🎨 **Wofi** application launcher
+*   🔔 **Dunst** notification daemon
+*   🖼️ **Grim + Slurp** screenshots
+
+### Security & Hardening
+
+*   🛡️ **UFW** firewall (default deny incoming)
+*   🔐 **AppArmor** mandatory access control
+*   🚫 **Fail2ban** intrusion prevention
+*   🔑 **SSH hardening** (key-based auth recommended)
+
+### Services & Utilities
+
+*   🗜️ **ZRAM** compressed swap
+*   🌐 **Tailscale** VPN
+*   🔄 **Syncthing** file synchronisation
+*   📡 **DNS-over-TLS** and DNSSEC
+*   ⚡ **CPU power management**
+*   🔄 **Automatic updates** (daily)
+*   🧹 **Automatic snapshots cleanup** (weekly)
+*   🪞 **Mirror updates** via reflector (weekly)
+*   🔍 **Btrfs scrub** for data integrity (monthly)
+
+---
+
+## 📋 Pre-Installation Steps
+
+### Requirements
+
+*   Target machine with UEFI firmware
+*   Arch Linux installation ISO
+*   Internet connection (Wi-Fi or Ethernet)
+*   Another computer for SSH access
+
+### Boot the Arch ISO
+
+1.  Download the latest Arch Linux ISO from https://archlinux.org/download/
+2.  Create a bootable USB drive
+3.  Boot the target machine from the USB
+4.  Select "Arch Linux install medium" from the boot menu
+
+---
+
+## 🌐 Step 1: Connect to Wi-Fi (if needed)
+
+If using Wi-Fi, connect using iwctl:
 
 ```
-arch-installer/
-├── install.sh                  # Main entry point (logging, dry-run, hybrid YAML loader)
-├── config/
-│   ├── install.yaml            # Main configuration file (comprehensive)
-│   ├── example.yaml            # Minimal example configuration
-│   ├── laptop.yaml             # Laptop-optimized configuration
-│   ├── desktop.yaml            # Desktop-optimized configuration
-│   └── vm.yaml                 # VM-optimized configuration
-├── bootstrap.sh                # Minimal setup script run from live ISO via SSH
-├── logs/
-│   └── arch-installer.log      # Generated installation log
-├── modules/
-│   ├── 00-preflight.sh         # Logging, environment checks, argument parsing
-│   ├── 01-config.sh            # YAML loading & interactive input
-│   ├── 02-partition.sh         # Disk, LUKS, Btrfs subvolumes
-│   ├── 03-base-install.sh      # pacstrap, locale, fstab
-│   ├── 04-chroot-setup.sh      # mkinitcpio, UKI, systemd-boot
-│   ├── 05-users.sh             # User + root creation
-│   ├── 06-network.sh           # networkd, iwd, ufw, tailscale
-│   ├── 07-services.sh          # Enable system services, timers, zram, etc.
-│   ├── 08-postinstall.sh       # stowall, README, verification scripts
-│   └── utils.sh                # Shared helper functions
-├── packages.txt                # Additional packages (one per line, alphabetical)
-├── verify.sh                   # System verification script
-└── README.md                   # This file
-```
-
----
-
-## 💻 Installation Workflow
-
-### 1️⃣ Boot from the Arch ISO
-
-On the target machine:
-```bash
 iwctl
 ```
 
-Then inside iwctl:
-```bash
-device list
-station wlan0 scan
-station wlan0 get-networks
-station wlan0 connect "<YourWifiName>"
+Inside iwctl:
+
+```
+device list                           # List wireless devices
+station wlan0 scan                    # Scan for networks
+station wlan0 get-networks           # Show available networks
+station wlan0 connect "YourWifiName" # Connect (will prompt for password)
 exit
 ```
 
-Confirm connectivity:
-```bash
+Verify connectivity:
+
+```
 ping -c3 archlinux.org
 ```
 
-### 2️⃣ Enable SSH
-```bash
+---
+
+## 🔌 Step 2: Enable SSH Access
+
+On the **target machine** (Arch ISO):
+
+```
+# Start SSH daemon
 systemctl start sshd
+
+# Set a temporary root password
 passwd
+
+# Find your IP address
 ip a
 ```
 
-Take note of your IP (e.g. 192.168.0.190).
+Look for your IP address (e.g., `192.168.0.190` under `wlan0` or `eth0`).
 
-### 3️⃣ SSH from your laptop
-```bash
+---
+
+## 💻 Step 3: SSH from Another Computer
+
+From your **laptop/another computer**:
+
+```
 ssh root@192.168.0.190
 ```
 
-### 4️⃣ Bootstrap
-```bash
-curl -sL https://raw.githubusercontent.com/joe-butler-23/arch-installer/main/bootstrap.sh -o bootstrap.sh
-bash bootstrap.sh
+Replace `192.168.0.190` with your target machine's IP.
+
+---
+
+## 📥 Step 4: Clone the Installer
+
+On the **target machine** (via SSH):
+
 ```
+# Install git
+pacman -Sy git
 
-This script:
-- Sets up SSH for GitHub access
-- Clones arch-installer and .dotfiles
-
-### 5️⃣ Run the installer
-```bash
-bash ~/arch-installer/install.sh
-```
-
-For a dry-run preview:
-```bash
-bash ~/arch-installer/install.sh --dry-run
+# Clone the installer
+git clone https://github.com/joe-butler-23/arch-installer.git
+cd arch-installer
 ```
 
 ---
 
-## ⚙️ Configuration via YAML
+## ⚙️ Step 5: Configure Installation
 
-The installer uses comprehensive YAML configuration files in the `config/` directory with support for different machine types:
+The installer uses a YAML configuration file. For a desktop installation with Hyprland:
 
-### Available Configurations
-- **`config/install.yaml`** - Complete configuration with all options
-- **`config/example.yaml`** - Minimal example for quick setup
-- **`config/laptop.yaml`** - Optimized for laptops (power management)
-- **`config/desktop.yaml`** - Optimized for desktops (performance)
-- **`config/vm.yaml`** - Optimized for virtual machines
-
-### Usage
-
-#### Option 1: Use a predefined configuration
-```bash
-# For desktop installation
-bash ~/arch-installer/install.sh --config config/desktop.yaml
-
-# For laptop installation
-bash ~/arch-installer/install.sh --config config/laptop.yaml
-
-# For VM installation
-bash ~/arch-installer/install.sh --config config/vm.yaml
+```
+# Review the desktop configuration
+cat config/desktop.yaml
 ```
 
-#### Option 2: Create custom configuration
-1. Copy `config/example.yaml` to `config/install.yaml`
-2. Customize the configuration as needed
-3. Run with default config:
+The configuration includes:
 
-```bash
-bash ~/arch-installer/install.sh --preseed
-```
-
-### Configuration Features
-- **YAML parsing** with automatic type conversion
-- **Interactive fallback** for missing values
-- **Configuration validation** with error checking
-- **Multiple machine profiles** for different use cases
-- **Security-first** - passwords never stored in files
-
-### Security Note
-**Passwords are intentionally excluded** from YAML files for security. The installer will prompt for:
-- Encryption password (if LUKS enabled)
-- Root password
-- User password
-
-### Key Configuration Options
-```yaml
-# Basic system
-disk: /dev/nvme0n1
-hostname: my-arch
-username: myuser
-kernel: linux-zen
-
-# Security
-encryption: true
-secure_boot: true
-
-# Performance
-enable_zram: true
-cpu_governor: performance
-
-# Services
-enable_tailscale: true
-enable_syncthing: true
-```
-
-### Machine-Specific Optimizations
-
-#### Laptop (`config/laptop.yaml`)
-- Power-saving CPU governor
-- TLP power management
-- Battery optimization
-- Laptop-specific packages
-
-#### Desktop (`config/desktop.yaml`)
-- Performance CPU governor
-- Gaming support
-- Development tools
-- Virtualization support
-
-#### VM (`config/vm.yaml`)
-- Minimal security overhead
-- Guest agent tools
-- Optimized for virtual environments
-- Development-focused packages
-
-Any missing values will be prompted interactively, ensuring a flexible installation process.
+*   Hostname and username
+*   Locale, keyboard, timezone
+*   Kernel choice (linux-zen)
+*   All features enabled (encryption, Secure Boot, etc.)
+*   Dotfiles repository
 
 ---
 
-## 🧠 Features
+## 🚀 Step 6: Run the Installation
 
-| Feature | Description |
-|---------|-------------|
-| Logging | All output piped through tee to `/var/log/arch-installer.log` |
-| Dry-run | Prints commands without executing them |
-| Hybrid Config | YAML preseed + interactive fallback |
-| Modular design | 8 logical stages for clarity & maintainability |
-| SSH install ready | Designed for headless deployment |
-| Post-install automation | Runs stowall for dotfiles, system verification, etc. |
+```
+# Run the installer
+sudo bash install.sh --config config/desktop.yaml
+```
+
+### What Happens During Installation
+
+1.  **Preflight checks** - Verifies environment and tools
+2.  **Configuration loading** - Loads settings from YAML
+3.  **Password prompts** - You'll be asked for:
+    *   Encryption password (twice for confirmation)
+    *   Root password (twice for confirmation)
+    *   User password (twice for confirmation)
+4.  **Disk partitioning** - Creates ESP and encrypted root partition
+5.  **LUKS encryption** - Sets up encrypted container
+6.  **Btrfs setup** - Creates filesystem with subvolumes
+7.  **Base system install** - Installs packages (including GUI)
+8.  **Chroot configuration** - Sets up bootloader and system
+9.  **User creation** - Creates your user account
+10.  **Network setup** - Configures networking
+11.  **Services** - Enables all system services and timers
+12.  **Post-install** - Attempts to clone dotfiles and configure auto-start
+
+### Progress Indication
+
+*   Green `[ • ]` - Information messages
+*   Yellow `[ ! ]` - Warnings (non-fatal)
+*   Red `[ ✗ ]` - Errors (fatal)
 
 ---
 
-## 🔧 Developer Notes
+## 📝 Step 7: Review Installation Results
 
-You can rerun a single module for debugging, e.g.:
+After installation completes, check the logs:
 
-```bash
-source modules/03-base-install.sh
-run_base_install
+```
+# View the installation log
+less logs/arch-installer-*.log
+
+# Check for any errors or warnings
+grep -i "error\|warn" logs/arch-installer-*.log
 ```
 
-Future extensions can include:
-- `config/laptop.yaml` and `config/desktop.yaml`
-- A recovery/uninstall module
-- Remote logging to a web dashboard
+---
+
+## 🔄 Step 8: Reboot
+
+```
+# Unmount everything
+umount -R /mnt
+
+# Reboot into your new system
+reboot
+```
+
+---
+
+## 🎯 Post-Installation Setup
+
+### First Login
+
+1.  **Boot the system** - It will boot to a TTY login screen
+2.  **Log in** with your username and password
+3.  **Hyprland will auto-start** - You'll be taken directly to the desktop
+
+### If Dotfiles Clone Failed During Installation
+
+If you see the zsh configuration wizard, your dotfiles weren't cloned (SSH keys not configured). Do this:
+
+```
+# Press 'q' to quit the zsh wizard
+
+# Generate SSH key
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# Display public key
+cat ~/.ssh/id_ed25519.pub
+# Copy this and add it to your GitHub account (Settings → SSH Keys)
+
+# Clone your dotfiles
+git clone git@github.com:joe-butler-23/.dotfiles ~/.dotfiles
+cd ~/.dotfiles
+./stowall.sh
+
+# Create auto-start for Hyprland
+cat > ~/.zprofile << 'EOF'
+# Auto-start Hyprland on TTY1
+if [ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+    exec Hyprland
+fi
+EOF
+
+# Start Hyprland now or reboot
+Hyprland
+```
+
+### Configure Secure Boot (Optional but Recommended)
+
+Secure Boot keys were created during installation but need to be enrolled:
+
+1.  **Reboot** and enter UEFI/BIOS (usually Del, F2, or F12 during boot)
+2.  **Navigate to Secure Boot settings**
+3.  **Delete/Clear all Secure Boot keys** - This puts the system in "Setup Mode"
+4.  **Save and exit** UEFI
+5.  **Boot into Arch Linux**
+6.  **Enroll the keys**:
+7.  **Reboot** and enter UEFI again
+8.  **Enable Secure Boot**
+9.  **Boot into Arch** - System will boot with Secure Boot enabled
+
+### Verify Secure Boot Status
+
+```
+# Check if Secure Boot is enabled
+sudo sbctl status
+
+# Verify all boot files are signed
+sudo sbctl verify
+```
+
+### Configure UFW Firewall
+
+The firewall was partially configured during installation but needs finalisation after first boot:
+
+```
+# Enable UFW if not already running
+sudo systemctl start ufw
+sudo systemctl enable ufw
+
+# Verify firewall rules
+sudo ufw status verbose
+
+# Should show:
+# - Default: deny incoming
+# - Default: allow outgoing
+# - SSH port rate-limited
+```
+
+### Configure Services
+
+#### Tailscale VPN
+
+```
+# Start and enable Tailscale
+sudo systemctl start tailscaled
+sudo systemctl enable tailscaled
+
+# Connect to your Tailscale network
+sudo tailscale up
+```
+
+#### Syncthing File Sync
+
+```
+# Start Syncthing (already enabled for your user)
+systemctl --user start syncthing
+
+# Access web interface
+# Open browser to: http://localhost:8384
+```
+
+### Verify Installation
+
+Run the verification script:
+
+```
+./verify.sh
+```
+
+This checks:
+
+*   Encryption status
+*   Btrfs subvolumes
+*   Boot configuration
+*   Services status
+*   Security settings
+
+---
+
+## 🔧 Continuation Script
+
+If installation was interrupted, you can continue from a specific module:
+
+```
+# Continue from where it left off (module 04)
+sudo bash continue-install.sh --config config/desktop.yaml
+
+# Start from a specific module (e.g., module 07)
+sudo bash continue-install.sh --start 07 --config config/desktop.yaml
+```
+
+Available starting points: 04, 05, 06, 07, 08
+
+---
+
+## 📦 Package Management
+
+### packages.txt
+
+The installer uses `packages.txt` to define additional packages. Edit this file to customise your installation:
+
+```
+# packages.txt format:
+# - One package per line
+# - Comments start with #
+# - Alphabetically sorted for easy management
+```
+
+Current packages include:
+
+*   All GUI packages (Hyprland, Waybar, Wofi, etc.)
+*   Security tools (AppArmor, UFW, Fail2ban)
+*   System utilities (Snapper, ZRAM, Tailscale, Syncthing)
+*   Development tools
+
+### Adding More Packages
+
+After installation, install additional packages with:
+
+```
+sudo pacman -S package-name
+```
+
+Or add them to `packages.txt` and reinstall.
+
+---
+
+## 🐛 Troubleshooting
+
+### Hyprland Doesn't Start
+
+```
+# Check if Hyprland is installed
+pacman -Q hyprland
+
+# Check logs
+journalctl -xe
+
+# Try starting manually
+Hyprland
+```
+
+### Dotfiles Missing
+
+```
+# Check if dotfiles exist
+ls -la ~/.dotfiles
+
+# If not, clone them
+git clone git@github.com:joe-butler-23/.dotfiles ~/.dotfiles
+cd ~/.dotfiles
+./stowall.sh
+```
+
+### Network Not Working
+
+```
+# Check network services
+sudo systemctl status systemd-networkd
+sudo systemctl status systemd-resolved
+sudo systemctl status iwd
+
+# Restart if needed
+sudo systemctl restart systemd-networkd
+```
+
+### Can't Connect to Wi-Fi
+
+```
+# Use iwctl
+iwctl
+
+# In iwctl:
+station wlan0 connect "YourWifiName"
+```
+
+---
+
+## 📚 Additional Resources
+
+*   [Arch Wiki](https://wiki.archlinux.org/)
+*   [Hyprland Documentation](https://wiki.hyprland.org/)
+*   [systemd-boot](https://wiki.archlinux.org/title/Systemd-boot)
+*   [LUKS](https://wiki.archlinux.org/title/Dm-crypt)
+*   [Btrfs](https://wiki.archlinux.org/title/Btrfs)
+
+---
+
+## 📄 Licence
+
+This project is provided as-is for personal use. Modify as needed.
+
+---
+
+## 🤝 Contributing
+
+This is a personal installation system, but suggestions are welcome via issues or pull requests.
+
+```
+sudo sbctl enroll-keys -m
+```
