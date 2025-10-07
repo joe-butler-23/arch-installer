@@ -18,6 +18,10 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
   exit 1
 fi
 
+# Initialize required variables
+DRYRUN=false
+export DRYRUN
+
 # Source config module to load variables
 source modules/01-config.sh
 load_config "$CONFIG_FILE"
