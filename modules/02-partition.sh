@@ -7,23 +7,38 @@ run_partition() {
   # Cleanup any existing mounts and LUKS volumes
   info "Cleaning up existing mounts and LUKS volumes"
   
+  # Unmount /mnt and all submounts first
+  if mountpoint -q /mnt; then
+    info "Unmounting /mnt"
+    umount -R /mnt 2>/dev/null || true
+  fi
+  
   # Unmount all partitions from the target disk
   if mount | grep -q "$disk"; then
     info "Unmounting partitions from $disk"
-    mount | grep "$disk" | awk '{print $1}' | xargs -r umount -R 2>/dev/null || true
+    mount | grep "$disk" | awk '{print $1}' | sort -r | xargs -r umount -R 2>/dev/null || true
   fi
   
-  # Close any existing LUKS containers
+  # Close all LUKS/dm-crypt containers
   if [[ -e /dev/mapper/cryptroot ]]; then
-    info "Closing existing LUKS container"
+    info "Closing cryptroot LUKS container"
     cryptsetup close cryptroot 2>/dev/null || true
   fi
+  
+  # Remove any other device-mapper devices related to this disk
+  for dm in $(dmsetup ls | grep -i crypt | awk '{print $1}'); do
+    info "Removing device-mapper device: $dm"
+    dmsetup remove "$dm" 2>/dev/null || true
+  done
   
   # Swapoff any swap on the disk
   swapoff -a 2>/dev/null || true
   
-  # Wait a moment for the kernel to release resources
-  sleep 2
+  # Kill any processes using the disk
+  fuser -km "$disk"* 2>/dev/null || true
+  
+  # Wait for the kernel to release resources
+  sleep 3
 
   # Wipe & create GPT
   info "Wiping disk and creating new partition table"
