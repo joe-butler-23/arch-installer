@@ -9,8 +9,13 @@ run_users() {
   run_cmd "echo 'root:${ROOTPASS}' | arch-chroot /mnt chpasswd"
 
   # User creation with zsh as default shell
-  info "Creating user ${username} with zsh shell"
-  run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  if arch-chroot /mnt id "${username}" &>/dev/null; then
+    info "User ${username} already exists, updating settings"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
+  else
+    info "Creating user ${username} with zsh shell"
+    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  fi
   echo -n "Enter password for ${username}: "
   read -rs USERPASS; echo
   run_cmd "echo '${username}:${USERPASS}' | arch-chroot /mnt chpasswd"
