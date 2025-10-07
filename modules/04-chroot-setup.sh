@@ -3,7 +3,13 @@
 run_chroot_setup() {
   info "=== Chroot Configuration ==="
 
-  luks_uuid=$(blkid -s UUID -o value "${CRYPTROOT:-${DISK}p2}")
+  # Get LUKS UUID
+  local cryptroot_partition="${disk}p2"
+  luks_uuid=$(blkid -s UUID -o value "$cryptroot_partition")
+  
+  if [[ -z "$luks_uuid" ]]; then
+    die "Failed to get LUKS UUID from $cryptroot_partition"
+  fi
 
   # mkinitcpio hooks for systemd-init + sd-encrypt
   info "Configuring mkinitcpio for UKI"
@@ -11,36 +17,39 @@ run_chroot_setup() {
 HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesystems fsck)
 EOF
 
-  run_cmd "arch-chroot /mnt mkinitcpio -P"
-
   # Create kernel cmdline for unified image
+  mkdir -p /mnt/etc/kernel
   cat > /mnt/etc/kernel/cmdline <<EOF
 rd.luks.name=${luks_uuid}=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw quiet loglevel=3 apparmor=1 lsm=landlock,lockdown,yama,apparmor,bpf
 EOF
 
   # Configure UKI presets
-  cat > /mnt/etc/mkinitcpio.d/${KERNEL}.preset <<EOF
+  cat > /mnt/etc/mkinitcpio.d/${kernel}.preset <<EOF
 ALL_config="/etc/mkinitcpio.conf"
-ALL_kver="/boot/vmlinuz-${KERNEL}"
+ALL_kver="/boot/vmlinuz-${kernel}"
 ALL_microcode=(/boot/*-ucode.img)
 
 PRESETS=('default' 'fallback')
 
-default_uki="/boot/EFI/Linux/arch-${KERNEL}.efi"
-fallback_uki="/boot/EFI/Linux/arch-${KERNEL}-fallback.efi"
+default_uki="/boot/EFI/Linux/arch-${kernel}.efi"
+fallback_uki="/boot/EFI/Linux/arch-${kernel}-fallback.efi"
 fallback_options="-S autodetect"
 EOF
+
+  # Create boot directory structure for UKI
+  mkdir -p /mnt/boot/EFI/Linux
 
   info "Installing systemd-boot"
   run_cmd "arch-chroot /mnt bootctl install"
 
   cat > /mnt/boot/loader/loader.conf <<EOF
-default arch-${KERNEL}.efi
+default arch-${kernel}.efi
 timeout 3
 console-mode max
 editor no
 EOF
 
+  info "Building unified kernel images"
   run_cmd "arch-chroot /mnt mkinitcpio -P"
 
   # Configure Snapper for root and home subvolumes
