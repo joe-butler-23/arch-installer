@@ -2,24 +2,24 @@
 
 run_partition() {
   info "=== Disk Partitioning & Encryption ==="
-  [[ -b "$DISK" ]] || die "Disk $DISK not found."
+  [[ -b "$disk" ]] || die "Disk $disk not found."
 
   # Wipe & create GPT
-  run_cmd "wipefs -af $DISK"
-  run_cmd "sgdisk -Zo $DISK"
-  run_cmd "parted -s $DISK mklabel gpt \
+  run_cmd "wipefs -af $disk"
+  run_cmd "sgdisk -Zo $disk"
+  run_cmd "parted -s $disk mklabel gpt \
     mkpart ESP fat32 1MiB 1GiB set 1 esp on \
     mkpart CRYPTROOT 1GiB 100%"
 
   sleep 2
-  ESP="${DISK}p1"
-  CRYPTROOT="${DISK}p2"
+  ESP="${disk}p1"
+  CRYPTROOT="${disk}p2"
 
   run_cmd "mkfs.fat -F32 -n EFI $ESP"
 
   info "Creating LUKS container on $CRYPTROOT"
-  echo -n "$LUKS_PASSWORD" | run_cmd "cryptsetup luksFormat $CRYPTROOT --type luks2 --cipher aes-xts-plain64 --key-size 512 --pbkdf argon2id -q"
-  echo -n "$LUKS_PASSWORD" | run_cmd "cryptsetup open $CRYPTROOT cryptroot -d -"
+  echo -n "$encryption_password" | run_cmd "cryptsetup luksFormat $CRYPTROOT --type luks2 --cipher aes-xts-plain64 --key-size 512 --pbkdf argon2id -q"
+  echo -n "$encryption_password" | run_cmd "cryptsetup open $CRYPTROOT cryptroot -d -"
   BTRFS_DEV="/dev/mapper/cryptroot"
 
   info "Formatting Btrfs filesystem"

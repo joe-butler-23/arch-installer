@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 run_preflight() {
+  # Create logs directory in project structure
+  mkdir -p logs
+  PROJECT_LOG="logs/arch-installer-$(date +%Y%m%d_%H%M%S).log"
+  
   # Ensure we're running in the right environment
   if [[ ! -d /var/log && -d /mnt/var/log ]]; then
     mkdir -p /mnt/var/log
@@ -12,39 +16,44 @@ run_preflight() {
     LOGFILE="/var/log/arch-installer.log"
   fi
 
-  # Create logs directory in project structure as well
-  mkdir -p logs
-  PROJECT_LOG="logs/arch-installer-$(date +%Y%m%d_%H%M%S).log"
-
   # Enhanced logging function with timestamps
   log_with_timestamp() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$LOGFILE" "$PROJECT_LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$PROJECT_LOG"
+    if [[ -w "$LOGFILE" ]]; then
+      echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOGFILE"
+    fi
   }
 
   # Override info, warn, error functions to include logging
   info() { 
     local msg="$(date '+%Y-%m-%d %H:%M:%S') - [INFO] $*"
     echo -e "${GREEN}[ • ]${RESET} $*"
-    echo "$msg" >> "$LOGFILE"
     echo "$msg" >> "$PROJECT_LOG"
+    if [[ -w "$LOGFILE" ]]; then
+      echo "$msg" >> "$LOGFILE"
+    fi
   }
   
   warn() { 
     local msg="$(date '+%Y-%m-%d %H:%M:%S') - [WARN] $*"
     echo -e "${YELLOW}[ ! ]${RESET} $*"
-    echo "$msg" >> "$LOGFILE"
     echo "$msg" >> "$PROJECT_LOG"
+    if [[ -w "$LOGFILE" ]]; then
+      echo "$msg" >> "$LOGFILE"
+    fi
   }
   
   error() { 
     local msg="$(date '+%Y-%m-%d %H:%M:%S') - [ERROR] $*"
     echo -e "${RED}[ ✗ ]${RESET} $*" >&2
-    echo "$msg" >> "$LOGFILE"
     echo "$msg" >> "$PROJECT_LOG"
+    if [[ -w "$LOGFILE" ]]; then
+      echo "$msg" >> "$LOGFILE"
+    fi
   }
 
-  # Start logging
-  exec > >(tee -a "$LOGFILE" "$PROJECT_LOG") 2>&1
+  # Start logging (only to project log, system log is optional)
+  exec > >(tee -a "$PROJECT_LOG") 2>&1
 
   DRYRUN=false
   PRESEEDED=false
@@ -80,7 +89,7 @@ run_preflight() {
 
   # Required tools
   info "=== Tool Verification ==="
-  for pkg in sgdisk parted cryptsetup btrfs-progs; do
+  for pkg in sgdisk parted cryptsetup btrfs; do
     if command -v "$pkg" &>/dev/null; then
       info "Tool available: $pkg"
     else
