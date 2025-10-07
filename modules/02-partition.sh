@@ -66,8 +66,9 @@ run_partition() {
   run_cmd "mkfs.fat -F32 -n EFI $ESP"
 
   info "Creating LUKS container on $CRYPTROOT"
-  echo -n "$encryption_password" | run_cmd "cryptsetup luksFormat $CRYPTROOT --type luks2 --cipher aes-xts-plain64 --key-size 512 --pbkdf argon2id -q"
-  echo -n "$encryption_password" | run_cmd "cryptsetup open $CRYPTROOT cryptroot -d -"
+  # Note: cryptsetup commands need stdin, so we can't use run_cmd wrapper
+  echo -n "$encryption_password" | cryptsetup luksFormat "$CRYPTROOT" --type luks2 --cipher aes-xts-plain64 --key-size 512 --pbkdf argon2id -q || die "Failed to format LUKS container"
+  echo -n "$encryption_password" | cryptsetup open "$CRYPTROOT" cryptroot -d - || die "Failed to open LUKS container"
   BTRFS_DEV="/dev/mapper/cryptroot"
 
   info "Formatting Btrfs filesystem"
