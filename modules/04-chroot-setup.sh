@@ -150,16 +150,19 @@ TIMELINE_CLEANUP_ALGORITHM="number"
 
 EOF
 
-  # Create .snapshots directories
+  # Create snapper config directories
+  run_cmd "mkdir -p /mnt/etc/snapper/configs"
   run_cmd "mkdir -p /mnt/.snapshots"
   run_cmd "mkdir -p /mnt/home/.snapshots"
-
-  # Create initial snapshots
-  run_cmd "arch-chroot /mnt snapper -c root create-config /"
-  run_cmd "arch-chroot /mnt snapper -c home create-config /home"
-  run_cmd "arch-chroot /mnt snapper -c root create --description 'First snapshot'"
-  run_cmd "arch-chroot /mnt snapper -c home create --description 'First snapshot'"
-
-  info "✅ Snapper configured for @root and @home subvolumes"
+  
+  # Set proper permissions
+  run_cmd "chmod 750 /mnt/.snapshots"
+  run_cmd "chmod 750 /mnt/home/.snapshots"
+  
+  # Note: Snapper's create-config requires DBus which isn't available in chroot
+  # The configuration files will be used when snapper runs after boot
+  
+  info "✅ Snapper configuration files created"
+  info "   Note: Snapper will initialize on first boot"
   info "✅ UKI and systemd-boot configured"
 }
