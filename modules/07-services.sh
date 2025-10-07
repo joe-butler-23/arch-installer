@@ -99,8 +99,8 @@ EOF
   # Create Secure Boot keys
   run_cmd "arch-chroot /mnt sbctl create-keys"
   
-  # Enroll keys in UEFI firmware
-  run_cmd "arch-chroot /mnt sbctl enroll-keys -m"
+  # Enroll keys in UEFI firmware (may fail if not in Setup Mode - user must do this after reboot)
+  arch-chroot /mnt sbctl enroll-keys -m || warn "Secure Boot keys not enrolled - you must reset Secure Boot in UEFI and enroll keys after first boot"
   
   # Sign all existing boot files
   run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
