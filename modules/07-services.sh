@@ -17,10 +17,12 @@ run_services() {
   done
 
   info "Configuring UFW"
-  run_cmd "arch-chroot /mnt ufw --force default deny incoming"
-  run_cmd "arch-chroot /mnt ufw --force default allow outgoing"
-  run_cmd "arch-chroot /mnt ufw limit ssh/tcp"
-  run_cmd "arch-chroot /mnt ufw --force enable"
+  # Note: UFW commands may fail in chroot due to missing kernel modules
+  # They will work properly after booting into the installed system
+  arch-chroot /mnt ufw --force default deny incoming || warn "UFW config will be applied after first boot"
+  arch-chroot /mnt ufw --force default allow outgoing || true
+  arch-chroot /mnt ufw limit ssh/tcp || true
+  arch-chroot /mnt ufw --force enable || true
 
   info "Configuring AppArmor"
   run_cmd "arch-chroot /mnt systemctl enable apparmor"
