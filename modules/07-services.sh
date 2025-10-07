@@ -101,8 +101,8 @@ EOF
   run_cmd "arch-chroot /mnt sbctl enroll-keys -m"
   
   # Sign all existing boot files
-  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${KERNEL}.efi"
-  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${KERNEL}-fallback.efi"
+  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
+  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}-fallback.efi"
   
   # Create sbctl verification service
   cat > /mnt/etc/systemd/system/sbctl-verify.service <<'EOF'
@@ -241,7 +241,7 @@ EOF
 
   # Enable additional services
   ADDITIONAL_SERVICES=(
-    syncthing@${USERNAME}.service
+    syncthing@${username}.service
     tailscaled.service
   )
   for s in "${ADDITIONAL_SERVICES[@]}"; do

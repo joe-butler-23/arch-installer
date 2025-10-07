@@ -8,39 +8,39 @@ run_postinstall() {
 
   # Clone dotfiles if not already present
   run_cmd "arch-chroot /mnt bash -c '
-    if [ ! -d /home/${USERNAME}/.dotfiles ]; then
-      sudo -u ${USERNAME} git clone git@github.com:joe-butler-23/.dotfiles /home/${USERNAME}/.dotfiles
+    if [ ! -d /home/${username}/.dotfiles ]; then
+      sudo -u ${username} git clone git@github.com:joe-butler-23/.dotfiles /home/${username}/.dotfiles
     fi
   '"
 
   # Run stowall if available
   run_cmd "arch-chroot /mnt bash -c '
-    if [ -x /home/${USERNAME}/.dotfiles/stowall.sh ]; then
-      cd /home/${USERNAME}/.dotfiles && sudo -u ${USERNAME} ./stowall.sh
+    if [ -x /home/${username}/.dotfiles/stowall.sh ]; then
+      cd /home/${username}/.dotfiles && sudo -u ${username} ./stowall.sh
     fi
   '"
 
   # Alternative stowall if stowall.sh not available but individual stow packages exist
   run_cmd "arch-chroot /mnt bash -c '
-    if [ ! -x /home/${USERNAME}/.dotfiles/stowall.sh ] && [ -d /home/${USERNAME}/.dotfiles ]; then
-      cd /home/${USERNAME}/.dotfiles
+    if [ ! -x /home/${username}/.dotfiles/stowall.sh ] && [ -d /home/${username}/.dotfiles ]; then
+      cd /home/${username}/.dotfiles
       for dir in */; do
         if [ -d "$dir" ]; then
-          sudo -u ${USERNAME} stow --target=/home/${USERNAME} "$dir"
+          sudo -u ${username} stow --target=/home/${username} "$dir"
         fi
       done
     fi
   '"
 
   # Copy verification script to user home
-  run_cmd "cp /mnt/arch-installer/verify.sh /mnt/home/${USERNAME}/verify.sh"
-  run_cmd "chmod +x /mnt/home/${USERNAME}/verify.sh"
-  run_cmd "chown ${USERNAME}:${USERNAME} /mnt/home/${USERNAME}/verify.sh"
+  run_cmd "cp /mnt/arch-installer/verify.sh /mnt/home/${username}/verify.sh"
+  run_cmd "chmod +x /mnt/home/${username}/verify.sh"
+  run_cmd "chown ${username}:${username} /mnt/home/${username}/verify.sh"
 
   # Write README + verification helper
-  cat > /mnt/home/${USERNAME}/README.txt <<EOF
+  cat > /mnt/home/${username}/README.txt <<EOF
 === Arch Linux Installation Complete ===
-User: ${USERNAME}
+User: ${username}
 Shell: zsh
 Next steps:
   1) Reboot
@@ -59,7 +59,7 @@ Services enabled:
 - DNS-over-TLS and DNSSEC
 - CPU power management
 EOF
-  run_cmd "chown ${USERNAME}:${USERNAME} /mnt/home/${USERNAME}/README.txt"
+  run_cmd "chown ${username}:${username} /mnt/home/${username}/README.txt"
 
   # Generate installation summary
   info "=== Installation Summary ==="
@@ -74,13 +74,13 @@ EOF
   info "  - User home: /home/${USERNAME}/verify.sh"
 
   # Create installation summary file
-  cat > /mnt/home/${USERNAME}/installation-summary.txt <<EOF
+  cat > /mnt/home/${username}/installation-summary.txt <<EOF
 === Arch Linux Installation Summary ===
 Date: $install_time
 Total time: ${total_time} seconds
-User: ${USERNAME}
+User: ${username}
 Shell: zsh
-Hostname: ${HOSTNAME:-arch-linux}
+Hostname: ${hostname:-archlinux}
 
 === Configured Features ===
 ✅ LUKS2 full-disk encryption
@@ -120,7 +120,7 @@ Verification: ~/verify.sh
 5. Configure Syncthing via web interface
 EOF
 
-  run_cmd "chown ${USERNAME}:${USERNAME} /mnt/home/${USERNAME}/installation-summary.txt"
+  run_cmd "chown ${username}:${username} /mnt/home/${username}/installation-summary.txt"
 
   info "✅ Post-install complete — system ready to reboot."
   info "✅ Dotfiles stowed successfully"

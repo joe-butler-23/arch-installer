@@ -9,11 +9,11 @@ run_users() {
   run_cmd "echo 'root:${ROOTPASS}' | arch-chroot /mnt chpasswd"
 
   # User creation with zsh as default shell
-  info "Creating user ${USERNAME} with zsh shell"
-  run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${USERNAME}"
-  echo -n "Enter password for ${USERNAME}: "
+  info "Creating user ${username} with zsh shell"
+  run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  echo -n "Enter password for ${username}: "
   read -rs USERPASS; echo
-  run_cmd "echo '${USERNAME}:${USERPASS}' | arch-chroot /mnt chpasswd"
+  run_cmd "echo '${username}:${USERPASS}' | arch-chroot /mnt chpasswd"
 
   # sudo + doas
   info "Configuring sudo and doas"
@@ -49,7 +49,7 @@ SyslogFacility AUTH
 LogLevel INFO
 
 # User restrictions
-AllowUsers ${USERNAME}
+AllowUsers ${username}
 EOF
 
   # Restart SSH service to apply changes
