@@ -1,31 +1,13 @@
 #!/usr/bin/env bash
 
 run_users() {
-  info "=== User Configuration ==="
+  info "=== Final User Configuration ==="
 
-  # Root password
-  echo -n "Enter root password: "
-  read -rs ROOTPASS; echo
-  run_cmd "echo 'root:${ROOTPASS}' | arch-chroot /mnt chpasswd"
-
-  # User creation with zsh as default shell
-  if arch-chroot /mnt id "${username}" &>/dev/null; then
-    info "User ${username} already exists, updating settings"
-    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
-  else
-    info "Creating user ${username} with zsh shell"
-    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  # Root password (already collected in step 1)
+  if [[ -n "${root_password:-}" ]]; then
+    run_cmd "echo 'root:${root_password}' | arch-chroot /mnt chpasswd"
+    info "✅ Root password set"
   fi
-  echo -n "Enter password for ${username}: "
-  read -rs USERPASS; echo
-  run_cmd "echo '${username}:${USERPASS}' | arch-chroot /mnt chpasswd"
-
-  # sudo + doas
-  info "Configuring sudo and doas"
-  run_cmd "echo 'permit persist :wheel' > /mnt/etc/doas.conf"
-  run_cmd "chmod 0400 /mnt/etc/doas.conf"
-  run_cmd "mkdir -p /mnt/etc/sudoers.d"
-  run_cmd "echo '%wheel ALL=(ALL:ALL) ALL' > /mnt/etc/sudoers.d/wheel"
 
   # SSH hardening
   info "Configuring SSH hardening"
@@ -60,4 +42,5 @@ EOF
 
   # Restart SSH service to apply changes
   run_cmd "arch-chroot /mnt systemctl restart sshd.service"
+  info "✅ SSH configuration completed"
 }

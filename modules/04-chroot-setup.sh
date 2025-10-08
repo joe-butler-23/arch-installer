@@ -330,5 +330,30 @@ EOF
     warn "  cd ~/.dotfiles && ./stowall.sh"
   fi
 
+  # User creation with sudo/doas configuration
+  info "=== User Configuration ==="
+  
+  if arch-chroot /mnt id "${username}" &>/dev/null; then
+    info "User ${username} already exists, updating settings"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
+  else
+    info "Creating user ${username} with zsh shell"
+    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  fi
+  
+  # Set user password from config
+  if [[ -n "${user_password:-}" ]]; then
+    run_cmd "echo '${username}:${user_password}' | arch-chroot /mnt chpasswd"
+    info "✅ User password set"
+  fi
+  
+  # sudo + doas configuration
+  info "Configuring sudo and doas"
+  run_cmd "echo 'permit persist :wheel' > /mnt/etc/doas.conf"
+  run_cmd "chmod 0400 /mnt/etc/doas.conf"
+  run_cmd "mkdir -p /mnt/etc/sudoers.d"
+  run_cmd "echo '%wheel ALL=(ALL:ALL) ALL' > /mnt/etc/sudoers.d/wheel"
+
+  info "✅ User configuration completed"
   info "✅ All package installation and dotfiles setup completed"
 }
