@@ -160,11 +160,7 @@ sudo bash install.sh --config config/desktop.yaml
 5.  **LUKS encryption** - Sets up encrypted container
 6.  **Btrfs setup** - Creates filesystem with subvolumes
 7.  **Base system install** - Installs packages (including GUI)
-8.  **Chroot configuration** - Sets up bootloader and system
-9.  **User creation** - Creates your user account
-10.  **Network setup** - Configures networking
-11.  **Services** - Enables all system services and timers
-12.  **Post-install** - Attempts to clone dotfiles and configure auto-start
+8.  **Chroot configuration** - Sets up bootloader, system, users, SSH, and packages
 
 ### Progress Indication
 
@@ -316,7 +312,7 @@ sudo bash continue-install.sh --config config/desktop.yaml
 sudo bash continue-install.sh --start 07 --config config/desktop.yaml
 ```
 
-Available starting points: 04, 05, 06, 07, 08
+Available starting points: 04, 06, 07, 08
 
 ---
 
