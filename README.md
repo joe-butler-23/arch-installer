@@ -25,10 +25,9 @@ A complete, modular Arch Linux installation system with full-disk encryption, Bt
 
 ### Security & Hardening
 
-*   🛡️ **UFW** firewall (default deny incoming)
 *   🔐 **AppArmor** mandatory access control
 *   🚫 **Fail2ban** intrusion prevention
-*   🔑 **SSH hardening** (key-based auth recommended)
+*    **SSH hardening** (key-based auth recommended)
 
 ### Services & Utilities
 
@@ -121,11 +120,13 @@ Replace `192.168.x.xxx` with the target machine's IP.
 
 ---
 
-## ⚙️ Step 4: Configure Installation
-
-The installer uses a YAML configuration file. For a desktop installation with Hyprland:
+## ⚙️ Step 4: Clone the Installer and Configure
 
 ```
+# Clone the repository
+git clone https://github.com/joe-butler-23/arch-installer.git
+cd arch-installer
+
 # Review the desktop configuration
 cat config/desktop.yaml
 ```
@@ -142,10 +143,6 @@ The configuration includes:
 
 ## 🚀 Step 5: Run the Installation
 
-```
-# Run the bootstrap
-sudo bash bootstrap.sh
-```
 ```
 # Run the installer
 sudo bash install.sh --config config/desktop.yaml
@@ -177,7 +174,7 @@ sudo bash install.sh --config config/desktop.yaml
 
 ---
 
-## 📝 Step 7: Review Installation Results
+## 📝 Step 6: Review Installation Results
 
 After installation completes, check the logs:
 
@@ -191,7 +188,7 @@ grep -i "error\|warn" logs/arch-installer-*.log
 
 ---
 
-## 🔄 Step 8: Reboot
+## 🔄 Step 7: Reboot
 
 ```
 # Unmount everything
@@ -264,24 +261,6 @@ sudo sbctl status
 
 # Verify all boot files are signed
 sudo sbctl verify
-```
-
-### Configure UFW Firewall
-
-The firewall was partially configured during installation but needs finalisation after first boot:
-
-```
-# Enable UFW if not already running
-sudo systemctl start ufw
-sudo systemctl enable ufw
-
-# Verify firewall rules
-sudo ufw status verbose
-
-# Should show:
-# - Default: deny incoming
-# - Default: allow outgoing
-# - SSH port rate-limited
 ```
 
 ### Configure Services
@@ -357,7 +336,7 @@ The installer uses `packages.txt` to define additional packages. Edit this file 
 Current packages include:
 
 *   All GUI packages (Hyprland, Waybar, Wofi, etc.)
-*   Security tools (AppArmor, UFW, Fail2ban)
+*   Security tools (AppArmor, Fail2ban)
 *   System utilities (Snapper, ZRAM, Tailscale, Syncthing)
 *   Development tools
 
@@ -398,9 +377,6 @@ After reboot, SSH may not be enabled:
 # On the target machine (via direct console access)
 sudo systemctl enable sshd
 sudo systemctl start sshd
-
-# Allow SSH through firewall
-sudo ufw allow ssh
 
 # Check SSH status
 sudo systemctl status sshd
