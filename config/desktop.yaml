@@ -1,5 +1,5 @@
 disk: /dev/nvme0n1
-hostname: joebutler
+hostname: desktop
 username: joebutler
 locale: en_GB.UTF-8
 keyboard_layout: uk
@@ -8,7 +8,7 @@ kernel: linux-zen
 encryption: true
 secure_boot: true
 enable_zram: true
-cpu_governor: ondemand
+cpu_governor: schedutil
 enable_tailscale: true
 enable_syncthing: true
 enable_firewall: true
