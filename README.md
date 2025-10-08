@@ -1,49 +1,10 @@
-# 🚀 Arch Linux Installer
+# Arch Linux Installer
 
-A complete, modular Arch Linux installation system with full-disk encryption, Btrfs, Hyprland desktop, and modern security features.
-
----
-
-## ✨ What Gets Installed
-
-### Core System
-
-*   🔐 **LUKS2 full-disk encryption** with Argon2id
-*   📦 **Btrfs filesystem** with optimised subvolumes and compression
-*   🥾 **systemd-boot** bootloader with Unified Kernel Images (UKI)
-*   🔒 **Secure Boot** ready (sbctl)
-*   📸 **Snapper** automatic snapshots for root and home
-
-### Desktop Environment
-
-*   🪟 **Hyprland** Wayland compositor
-*   📊 **Waybar** status bar
-*   🚀 **Kitty** terminal emulator
-*   🎨 **Wofi** application launcher
-*   🔔 **Dunst** notification daemon
-*   🖼️ **Grim + Slurp** screenshots
-
-### Security & Hardening
-
-*   🔐 **AppArmor** mandatory access control
-*   🚫 **Fail2ban** intrusion prevention
-*    **SSH hardening** (key-based auth recommended)
-
-### Services & Utilities
-
-*   🗜️ **ZRAM** compressed swap
-*   🌐 **Tailscale** VPN
-*   🔄 **Syncthing** file synchronisation
-*   📡 **DNS-over-TLS** and DNSSEC
-*   ⚡ **CPU power management**
-*   🔄 **Automatic updates** (daily)
-*   🧹 **Automatic snapshots cleanup** (weekly)
-*   🪞 **Mirror updates** via reflector (weekly)
-*   🔍 **Btrfs scrub** for data integrity (monthly)
+A complete, modular Arch Linux installation system with full-disk encryption, Btrfs, Hyprland desktop, and modern security features. Guide is written for installing over SSH
 
 ---
 
-## 📋 Pre-Installation Steps
+## Pre-Installation Steps
 
 ### Requirements
 
@@ -61,7 +22,7 @@ A complete, modular Arch Linux installation system with full-disk encryption, Bt
 
 ---
 
-## 🌐 Step 1: Connect to Wi-Fi (if needed)
+## 🌐 Step 1: Connect to Wi-Fi
 
 If using Wi-Fi, connect using iwctl:
 
@@ -72,10 +33,10 @@ iwctl
 Inside iwctl:
 
 ```
-device list                           # List wireless devices
-station wlan0 scan                    # Scan for networks
-station wlan0 get-networks           # Show available networks
-station wlan0 connect "YourWifiName" # Connect (will prompt for password)
+device list                             # List wireless devices
+station wlan0 scan                      # Scan for networks
+station wlan0 get-networks              # Show available networks
+station wlan0 connect "YourWifiName"    # Connect (will prompt for password)
 exit
 ```
 
@@ -84,12 +45,7 @@ Verify connectivity:
 ```
 ping -c3 archlinux.org
 ```
-
----
-
-## 🔌 Step 2: Enable SSH Access
-
-On the **target machine** (Arch ISO):
+Then enable SSH access:
 
 ```
 # Start SSH daemon
@@ -106,7 +62,7 @@ Look for your IP address (e.g., `192.168.0.190` under `wlan0` or `eth0`).
 
 ---
 
-## 💻 Step 3: SSH from Another Computer
+## 💻 Step 2: SSH from Another Computer
 
 From your **laptop/another computer**:
 
@@ -120,15 +76,16 @@ Replace `192.168.x.xxx` with the target machine's IP.
 
 ---
 
-## ⚙️ Step 4: Clone the Installer and Configure
+## ⚙️ Step 3: Clone Installer and Configure
 
 ```
-# Clone the repository
+# Install git
+pacman -Sy git
+
+# Clone repo
 git clone https://github.com/joe-butler-23/arch-installer.git
 cd arch-installer
 
-# Review the desktop configuration
-cat config/desktop.yaml
 ```
 
 The configuration includes:
@@ -141,12 +98,26 @@ The configuration includes:
 
 ---
 
-## 🚀 Step 5: Run the Installation
+## 🚀 Step 4: Run the Installation
 
 ```
 # Run the installer
+sudo bash install.sh
+```
+Can be pre-configured:
+
+```
+# Run the installer with config 
 sudo bash install.sh --config config/desktop.yaml
 ```
+
+The configuration includes:
+
+*   Hostname and username
+*   Locale, keyboard, timezone
+*   Kernel choice (linux-zen)
+*   All features enabled (encryption, Secure Boot, etc.)
+*   Dotfiles repository
 
 ### What Happens During Installation
 
@@ -162,17 +133,30 @@ sudo bash install.sh --config config/desktop.yaml
 7.  **Base system install** - Installs packages (including GUI)
 8.  **Chroot configuration** - Sets up bootloader, system, users, SSH, and packages
 
-### Progress Indication
-
-*   Green `[ • ]` - Information messages
-*   Yellow `[ ! ]` - Warnings (non-fatal)
-*   Red `[ ✗ ]` - Errors (fatal)
-
 ---
+
+## 🔧 Step 5: Continuation Script
+
+After bases is installed, you can choose whether or not to continue with remaining modules: 
+
+```
+# Continue script
+sudo bash continue-install.sh
+
+```
+
+And you can choose a specific module to start from:
+
+```
+
+# Start from a specific module (e.g., module 07)
+sudo bash continue-install.sh --start 07
+
+```
 
 ## 📝 Step 6: Review Installation Results
 
-After installation completes, check the logs:
+Post-installation, there are logs that can be reviewed:
 
 ```
 # View the installation log
@@ -190,7 +174,7 @@ grep -i "error\|warn" logs/arch-installer-*.log
 # Unmount everything
 umount -R /mnt
 
-# Reboot into your new system
+# Reboot
 reboot
 ```
 
@@ -198,44 +182,7 @@ reboot
 
 ## 🎯 Post-Installation Setup
 
-### First Login
-
-1.  **Boot the system** - It will boot to a TTY login screen
-2.  **Log in** with your username and password
-3.  **Hyprland will auto-start** - You'll be taken directly to the desktop
-
-### If Dotfiles Clone Failed During Installation
-
-If you see the zsh configuration wizard, your dotfiles weren't cloned (SSH keys not configured). Do this:
-
-```
-# Press 'q' to quit the zsh wizard
-
-# Generate SSH key
-ssh-keygen -t ed25519 -C "your_email@example.com"
-
-# Display public key
-cat ~/.ssh/id_ed25519.pub
-# Copy this and add it to your GitHub account (Settings → SSH Keys)
-
-# Clone your dotfiles
-git clone git@github.com:joe-butler-23/.dotfiles ~/.dotfiles
-cd ~/.dotfiles
-./stowall.sh
-
-# Create auto-start for Hyprland
-cat > ~/.zprofile << 'EOF'
-# Auto-start Hyprland on TTY1
-if [ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    exec Hyprland
-fi
-EOF
-
-# Start Hyprland now or reboot
-Hyprland
-```
-
-### Configure Secure Boot (Optional but Recommended)
+### Configure Secure Boot 
 
 Secure Boot keys were created during installation but need to be enrolled:
 
@@ -300,33 +247,18 @@ This checks:
 
 ---
 
-## 🔧 Continuation Script
-
-If installation was interrupted, you can continue from a specific module:
-
-```
-# Continue from where it left off (module 04)
-sudo bash continue-install.sh --config config/desktop.yaml
-
-# Start from a specific module (e.g., module 07)
-sudo bash continue-install.sh --start 07 --config config/desktop.yaml
-```
-
-Available starting points: 04, 06, 07, 08
-
----
 
 ## 📦 Package Management
 
 ### packages.txt
 
-The installer uses `packages.txt` to define additional packages. Edit this file to customise your installation:
+The installer uses `packages.txt` to define additional packages installable by pacman. This can be amended:
 
 ```
 # packages.txt format:
 # - One package per line
 # - Comments start with #
-# - Alphabetically sorted for easy management
+# - Alphabetically sorted
 ```
 
 Current packages include:
@@ -336,176 +268,4 @@ Current packages include:
 *   System utilities (Snapper, ZRAM, Tailscale, Syncthing)
 *   Development tools (base-devel, git)
 
-### Adding More Packages
-
-After installation, install additional packages with:
-
-```
-sudo pacman -S package-name
-```
-
-Or add them to `packages.txt` and reinstall.
-
 ---
-
-## 🔌 SSH Connection Troubleshooting
-
-### SSH Authentication Failures
-
-If you encounter "Too many authentication failures" when connecting:
-
-```
-# Clear old SSH host keys
-ssh-keygen -R <IP_ADDRESS>
-
-# Connect with password-only authentication
-ssh -o IdentitiesOnly=yes -o PreferredAuthentications=password user@<IP_ADDRESS>
-
-# If SSH is on non-standard port
-ssh -p <PORT> -o IdentitiesOnly=yes user@<IP_ADDRESS>
-```
-
-### SSH Service Not Running
-
-After reboot, SSH may not be enabled:
-
-```
-# On the target machine (via direct console access)
-sudo systemctl enable sshd
-sudo systemctl start sshd
-
-# Check SSH status
-sudo systemctl status sshd
-```
-
-### SSH Port Configuration
-
-If SSH is configured on a non-standard port (e.g., port 24):
-
-```
-# Connect with specific port
-ssh -p 24 user@<IP_ADDRESS>
-
-# Copy files with specific port
-scp -P 24 file.txt user@<IP_ADDRESS>:~/
-```
-
----
-
-## 📦 Manual Post-Install Steps
-
-If the automatic package installation or dotfiles cloning failed during the main installation, complete these steps manually:
-
-### Install Missing Packages
-
-```
-# Download packages.txt to the target machine
-curl -O https://raw.githubusercontent.com/joe-butler-23/arch-installer/main/packages.txt
-
-# Install all packages
-sudo pacman -S --needed $(grep -v '^#' packages.txt | grep -v '^$' | tr '\n' ' ')
-```
-
-### Copy Dotfiles from Another Machine
-
-```
-# From your laptop/another computer
-scp -r ~/.dotfiles user@<IP_ADDRESS>:~/
-
-# Or clone from GitHub (if public or SSH keys configured)
-git clone https://github.com/joe-butler-23/.dotfiles ~/.dotfiles
-cd ~/.dotfiles
-./stowall.sh
-```
-
-### Configure Desktop Environment
-
-```
-# Ensure Hyprland starts on TTY1
-cat > ~/.zprofile << 'EOF'
-# Auto-start Hyprland on TTY1
-if [ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    exec Hyprland
-fi
-EOF
-
-# Start Hyprland immediately or reboot
-Hyprland
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Hyprland Doesn't Start
-
-```
-# Check if Hyprland is installed
-pacman -Q hyprland
-
-# Check logs
-journalctl -xe
-
-# Try starting manually
-Hyprland
-```
-
-### Dotfiles Missing
-
-```
-# Check if dotfiles exist
-ls -la ~/.dotfiles
-
-# If not, clone them
-git clone git@github.com/joe-butler-23/.dotfiles ~/.dotfiles
-cd ~/.dotfiles
-./stowall.sh
-```
-
-### Network Not Working
-
-```
-# Check network services
-sudo systemctl status systemd-networkd
-sudo systemctl status systemd-resolved
-sudo systemctl status iwd
-
-# Restart if needed
-sudo systemctl restart systemd-networkd
-```
-
-### Can't Connect to Wi-Fi
-
-```
-# Use iwctl
-iwctl
-
-# In iwctl:
-station wlan0 connect "YourWifiName"
-```
-
----
-
-## 📚 Additional Resources
-
-*   [Arch Wiki](https://wiki.archlinux.org/)
-*   [Hyprland Documentation](https://wiki.hyprland.org/)
-*   [systemd-boot](https://wiki.archlinux.org/title/Systemd-boot)
-*   [LUKS](https://wiki.archlinux.org/title/Dm-crypt)
-*   [Btrfs](https://wiki.archlinux.org/title/Btrfs)
-
----
-
-## 📄 Licence
-
-This project is provided as-is for personal use. Modify as needed.
-
----
-
-## 🤝 Contributing
-
-This is a personal installation system, but suggestions are welcome via issues or pull requests.
-
-```
-sudo sbctl enroll-keys -m
-```
