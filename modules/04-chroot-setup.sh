@@ -263,16 +263,26 @@ EOF
     warn "packages.txt not found, skipping additional package installation"
   fi
 
-  # Install yay from AUR
+  # Install yay from AUR (robust, single chroot, build in user's home)
   info "=== Installing yay from AUR ==="
   if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
     info "yay is already installed"
   else
     info "Building and installing yay..."
-    run_cmd "arch-chroot /mnt sudo -u ${username} git clone https://aur.archlinux.org/yay.git /tmp/yay"
-    run_cmd "arch-chroot /mnt bash -c 'cd /tmp/yay && sudo -u ${username} makepkg -si --noconfirm'"
-    run_cmd "arch-chroot /mnt rm -rf /tmp/yay"
-    
+  
+    arch-chroot /mnt bash -lc "
+  set -e
+  pacman -S --needed --noconfirm base-devel git
+  install -d -m 0755 -o ${username} -g ${username} /home/${username}/.local/src
+  if [ ! -d /home/${username}/.local/src/yay ]; then
+    sudo -u ${username} git clone --depth 1 https://aur.archlinux.org/yay.git /home/${username}/.local/src/yay
+  else
+    cd /home/${username}/.local/src/yay && sudo -u ${username} git pull --ff-only
+  fi
+  cd /home/${username}/.local/src/yay
+  sudo -u ${username} makepkg -si --noconfirm
+  "
+  
     if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
       info "✅ yay installed successfully"
     else
@@ -280,14 +290,18 @@ EOF
     fi
   fi
 
-  # Install AUR packages using yay
+# Install AUR packages using yay (run as the user inside one chroot)
   info "=== Installing AUR Packages ==="
   aur_packages="1password"
   failed_aur_packages=""
   
+  if ! arch-chroot /mnt bash -lc "sudo -u ${username} yay -Y --gendb >/dev/null 2>&1 || true"; then
+    warn "Could not initialise yay DB (continuing)"
+  fi
+  
   for pkg in $aur_packages; do
     info "Installing $pkg via yay..."
-    if ! arch-chroot /mnt sudo -u ${username} yay -S --noconfirm "$pkg"; then
+    if ! arch-chroot /mnt bash -lc "sudo -u ${username} yay -S --noconfirm --needed $pkg"; then
       warn "Failed to install $pkg via yay"
       failed_aur_packages="$failed_aur_packages $pkg"
     else
@@ -296,7 +310,7 @@ EOF
   done
   
   if [[ -n "$failed_aur_packages" ]]; then
-    warn "These AUR packages failed to install: $failed_aur_packages"
+    warn "These AUR packages failed to install:$failed_aur_packages"
   fi
 
   # Verify critical packages are installed
