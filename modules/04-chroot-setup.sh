@@ -3,6 +3,71 @@
 run_chroot_setup() {
   info "=== Chroot Configuration ==="
 
+  # User and SSH Configuration
+  info "=== User and SSH Configuration ==="
+  
+  # Set root password from config (already collected in step 1)
+  if [[ -n "${root_password:-}" ]]; then
+    run_cmd "echo 'root:${root_password}' | arch-chroot /mnt chpasswd"
+    info "✅ Root password set"
+  fi
+
+  if arch-chroot /mnt id "${username}" &>/dev/null; then
+    info "User ${username} already exists, updating settings"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
+  else
+    info "Creating user ${username} with zsh shell"
+    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+  fi
+  
+  # Set user password from config
+  if [[ -n "${user_password:-}" ]]; then
+    run_cmd "echo '${username}:${user_password}' | arch-chroot /mnt chpasswd"
+    info "✅ User password set"
+  fi
+  
+  # sudo + doas configuration
+  info "Configuring sudo and doas"
+  run_cmd "echo 'permit persist :wheel' > /mnt/etc/doas.conf"
+  run_cmd "chmod 0400 /mnt/etc/doas.conf"
+  run_cmd "mkdir -p /mnt/etc/sudoers.d"
+  run_cmd "echo '%wheel ALL=(ALL:ALL) ALL' > /mnt/etc/sudoers.d/wheel"
+
+  # SSH hardening
+  info "Configuring SSH hardening"
+  cat > /mnt/etc/ssh/sshd_config <<'EOF'
+# SSH hardening configuration
+Port 22
+Protocol 2
+
+# Authentication
+PermitRootLogin no
+PasswordAuthentication yes
+PubkeyAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Security
+X11Forwarding no
+AllowTcpForwarding no
+GatewayPorts no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+MaxAuthTries 3
+MaxSessions 2
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# User restrictions
+AllowUsers ${username}
+EOF
+
+  # Restart SSH service to apply changes
+  run_cmd "arch-chroot /mnt systemctl restart sshd.service"
+  info "✅ User and SSH configuration completed"
+
   # Get LUKS UUID
   local cryptroot_partition="${disk}p2"
   luks_uuid=$(blkid -s UUID -o value "$cryptroot_partition")
@@ -330,30 +395,5 @@ EOF
     warn "  cd ~/.dotfiles && ./stowall.sh"
   fi
 
-  # User creation with sudo/doas configuration
-  info "=== User Configuration ==="
-  
-  if arch-chroot /mnt id "${username}" &>/dev/null; then
-    info "User ${username} already exists, updating settings"
-    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
-  else
-    info "Creating user ${username} with zsh shell"
-    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
-  fi
-  
-  # Set user password from config
-  if [[ -n "${user_password:-}" ]]; then
-    run_cmd "echo '${username}:${user_password}' | arch-chroot /mnt chpasswd"
-    info "✅ User password set"
-  fi
-  
-  # sudo + doas configuration
-  info "Configuring sudo and doas"
-  run_cmd "echo 'permit persist :wheel' > /mnt/etc/doas.conf"
-  run_cmd "chmod 0400 /mnt/etc/doas.conf"
-  run_cmd "mkdir -p /mnt/etc/sudoers.d"
-  run_cmd "echo '%wheel ALL=(ALL:ALL) ALL' > /mnt/etc/sudoers.d/wheel"
-
-  info "✅ User configuration completed"
   info "✅ All package installation and dotfiles setup completed"
 }
