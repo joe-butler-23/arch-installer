@@ -303,7 +303,7 @@ EOF
     if [ -d /home/${username}/.dotfiles ]; then
       rm -rf /home/${username}/.dotfiles
     fi
-    sudo -u ${username} git clone --force https://github.com/joe-butler-23/.dotfiles /home/${username}/.dotfiles
+    sudo -u ${username} git clone https://github.com/joe-butler-23/.dotfiles /home/${username}/.dotfiles
   "; then
     info "✅ Dotfiles cloned successfully"
     
