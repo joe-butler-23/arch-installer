@@ -334,7 +334,7 @@ Current packages include:
 *   All GUI packages (Hyprland, Waybar, Wofi, etc.)
 *   Security tools (AppArmor, Fail2ban)
 *   System utilities (Snapper, ZRAM, Tailscale, Syncthing)
-*   Development tools
+*   Development tools (base-devel, git)
 
 ### Adding More Packages
 

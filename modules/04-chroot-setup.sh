@@ -263,59 +263,14 @@ EOF
     warn "packages.txt not found, skipping additional package installation"
   fi
 
-  # Install yay from AUR (robust, single chroot, build in user's home)
-  info "=== Installing yay from AUR ==="
-  if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
-    info "yay is already installed"
-  else
-    info "Building and installing yay..."
-  
-    arch-chroot /mnt bash -lc "
-  set -e
-  pacman -S --needed --noconfirm base-devel git
-  install -d -m 0755 -o ${username} -g ${username} /home/${username}/.local/src
-  if [ ! -d /home/${username}/.local/src/yay ]; then
-    sudo -u ${username} git clone --depth 1 https://aur.archlinux.org/yay.git /home/${username}/.local/src/yay
-  else
-    cd /home/${username}/.local/src/yay && sudo -u ${username} git pull --ff-only
-  fi
-  cd /home/${username}/.local/src/yay
-  sudo -u ${username} makepkg -si --noconfirm
-  "
-  
-    if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
-      info "✅ yay installed successfully"
-    else
-      warn "❌ yay installation failed"
-    fi
-  fi
+  # AUR package installation removed for stability
+  info "Skipping AUR package installation"
 
-# Install AUR packages using yay (run as the user inside one chroot)
-  info "=== Installing AUR Packages ==="
-  aur_packages="1password"
-  failed_aur_packages=""
-  
-  if ! arch-chroot /mnt bash -lc "sudo -u ${username} yay -Y --gendb >/dev/null 2>&1 || true"; then
-    warn "Could not initialise yay DB (continuing)"
-  fi
-  
-  for pkg in $aur_packages; do
-    info "Installing $pkg via yay..."
-    if ! arch-chroot /mnt bash -lc "sudo -u ${username} yay -S --noconfirm --needed $pkg"; then
-      warn "Failed to install $pkg via yay"
-      failed_aur_packages="$failed_aur_packages $pkg"
-    else
-      info "✅ $pkg installed successfully"
-    fi
-  done
-  
-  if [[ -n "$failed_aur_packages" ]]; then
-    warn "These AUR packages failed to install:$failed_aur_packages"
-  fi
+  # AUR package installation removed for stability
 
   # Verify critical packages are installed
   info "=== Verifying Critical Packages ==="
-  critical_packages="mousepad localsend yay 1password"
+  critical_packages="mousepad localsend"
   missing_packages=""
   
   for pkg in $critical_packages; do
