@@ -3,60 +3,6 @@
 run_postinstall() {
   info "=== Post-Install Tasks ==="
 
-  # Clone dotfiles if not already present (may fail without SSH keys configured)
-  info "Attempting to clone dotfiles..."
-  if arch-chroot /mnt bash -c "
-    if [ ! -d /home/${username}/.dotfiles ]; then
-      sudo -u ${username} git clone git@github.com:joe-butler-23/.dotfiles /home/${username}/.dotfiles 2>/dev/null
-    fi
-  "; then
-    info "✅ Dotfiles repository cloned successfully"
-    
-    # Run stowall if available
-    if arch-chroot /mnt test -x /home/${username}/.dotfiles/stowall.sh; then
-      info "Running stowall.sh"
-      if arch-chroot /mnt bash -c "cd /home/${username}/.dotfiles && sudo -u ${username} ./stowall.sh"; then
-        info "✅ stowall.sh completed successfully"
-      else
-        warn "stowall.sh encountered errors"
-      fi
-    elif arch-chroot /mnt test -d /home/${username}/.dotfiles; then
-      info "Running manual stow on dotfiles"
-      arch-chroot /mnt bash -c "
-        cd /home/${username}/.dotfiles || exit 0
-        for d in */; do
-          if [ -d \"\$d\" ]; then
-            sudo -u ${username} stow --target=/home/${username} \"\${d%/}\" 2>/dev/null || true
-          fi
-        done
-      " && info "✅ Manual stow completed" || warn "Manual stow encountered errors"
-    fi
-    
-    # Verify key dotfiles were created
-    info "Verifying dotfiles installation..."
-    local dotfiles_ok=true
-    for dotfile in .zshrc .config/hypr/hyprland.conf; do
-      if arch-chroot /mnt test -f /home/${username}/$dotfile; then
-        info "  ✅ $dotfile present"
-      else
-        warn "  ❌ $dotfile missing"
-        dotfiles_ok=false
-      fi
-    done
-    
-    if $dotfiles_ok; then
-      info "✅ Dotfiles verification passed"
-    else
-      warn "⚠️  Some dotfiles are missing - manual setup may be needed"
-    fi
-  else
-    warn "❌ Dotfiles clone failed - SSH keys not configured"
-    warn "After first login, run:"
-    warn "  ssh-keygen -t ed25519 -C 'your_email@example.com'"
-    warn "  # Add ~/.ssh/id_ed25519.pub to GitHub"
-    warn "  git clone git@github.com:joe-butler-23/.dotfiles ~/.dotfiles"
-    warn "  cd ~/.dotfiles && ./stowall.sh"
-  fi
   
   # Create .zprofile for auto-starting Hyprland on TTY1
   info "Configuring Hyprland auto-start..."
@@ -147,7 +93,6 @@ Hostname: ${hostname:-archlinux}
 ✅ CPU power management (performance governor)
 ✅ I/O schedulers (bfq for SSDs, deadline for HDDs)
 ✅ SSH hardening
-✅ UFW firewall
 ✅ AppArmor security
 ✅ Fail2ban protection
 ✅ Automatic updates (daily)
@@ -177,7 +122,6 @@ EOF
   run_cmd "arch-chroot /mnt chown ${username}:${username} /home/${username}/installation-summary.txt"
 
   info "✅ Post-install complete — system ready to reboot."
-  info "✅ Dotfiles stowed successfully"
   info "✅ Verification script copied to user home"
   info "✅ Installation summary created"
   info "📝 Comprehensive logs available with full command history and timestamps"

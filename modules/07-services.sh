@@ -4,25 +4,17 @@ run_services() {
   info "=== Services & Hardening ==="
 
   # Base security + power + bluetooth + zram + secure boot + additional tools
-  PKGS="ufw apparmor fail2ban tlp tlp-rdw bluez bluez-utils zram-generator sbctl cpupower reflector"
+  PKGS="apparmor fail2ban tlp tlp-rdw bluez bluez-utils zram-generator sbctl cpupower reflector"
   run_cmd "arch-chroot /mnt pacman -S --needed --noconfirm ${PKGS}"
 
   # Enable essential services
   SERVICES=(
     systemd-networkd.service systemd-resolved.service iwd.service
-    ufw.service apparmor.service fail2ban.service tlp.service bluetooth.service
+    apparmor.service fail2ban.service tlp.service bluetooth.service
   )
   for s in "${SERVICES[@]}"; do
     run_cmd "arch-chroot /mnt systemctl enable $s || true"
   done
-
-  info "Configuring UFW"
-  # Note: UFW commands may fail in chroot due to missing kernel modules
-  # They will work properly after booting into the installed system
-  arch-chroot /mnt ufw --force default deny incoming || warn "UFW config will be applied after first boot"
-  arch-chroot /mnt ufw --force default allow outgoing || true
-  arch-chroot /mnt ufw limit ssh/tcp || true
-  arch-chroot /mnt ufw --force enable || true
 
   info "Configuring AppArmor"
   run_cmd "arch-chroot /mnt systemctl enable apparmor"

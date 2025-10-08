@@ -165,4 +165,170 @@ EOF
   info "✅ Snapper configuration files created"
   info "   Note: Snapper will initialize on first boot"
   info "✅ UKI and systemd-boot configured"
+
+  # Install additional packages from packages.txt
+  info "=== Installing Additional Packages ==="
+  
+  if [[ -f packages.txt ]]; then
+    info "Loading packages from packages.txt"
+    # Read packages.txt, skip comments and empty lines
+    pacman_packages=$(grep -v '^#' packages.txt | grep -v '^$' | tr '\n' ' ')
+    info "Found $(echo $pacman_packages | wc -w) packages to install"
+    
+    # Install packages with error handling
+    failed_packages=""
+    for pkg in $pacman_packages; do
+      info "Installing $pkg..."
+      if ! arch-chroot /mnt pacman -S --needed --noconfirm "$pkg"; then
+        warn "Failed to install $pkg via pacman"
+        failed_packages="$failed_packages $pkg"
+      else
+        info "✅ $pkg installed successfully"
+      fi
+    done
+    
+    # Report any failures
+    if [[ -n "$failed_packages" ]]; then
+      warn "These packages failed to install via pacman: $failed_packages"
+      warn "These may need to be installed via AUR or checked for correct names"
+    fi
+    
+    info "✅ Package installation completed"
+  else
+    warn "packages.txt not found, skipping additional package installation"
+  fi
+
+  # Install yay from AUR
+  info "=== Installing yay from AUR ==="
+  if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
+    info "yay is already installed"
+  else
+    info "Building and installing yay..."
+    run_cmd "arch-chroot /mnt sudo -u ${username} git clone https://aur.archlinux.org/yay.git /tmp/yay"
+    run_cmd "arch-chroot /mnt bash -c 'cd /tmp/yay && sudo -u ${username} makepkg -si --noconfirm'"
+    run_cmd "arch-chroot /mnt rm -rf /tmp/yay"
+    
+    if arch-chroot /mnt pacman -Q yay >/dev/null 2>&1; then
+      info "✅ yay installed successfully"
+    else
+      warn "❌ yay installation failed"
+    fi
+  fi
+
+  # Install AUR packages using yay
+  info "=== Installing AUR Packages ==="
+  aur_packages="1password"
+  failed_aur_packages=""
+  
+  for pkg in $aur_packages; do
+    info "Installing $pkg via yay..."
+    if ! arch-chroot /mnt sudo -u ${username} yay -S --noconfirm "$pkg"; then
+      warn "Failed to install $pkg via yay"
+      failed_aur_packages="$failed_aur_packages $pkg"
+    else
+      info "✅ $pkg installed successfully"
+    fi
+  done
+  
+  if [[ -n "$failed_aur_packages" ]]; then
+    warn "These AUR packages failed to install: $failed_aur_packages"
+  fi
+
+  # Verify critical packages are installed
+  info "=== Verifying Critical Packages ==="
+  critical_packages="mousepad localsend yay 1password"
+  missing_packages=""
+  
+  for pkg in $critical_packages; do
+    if arch-chroot /mnt pacman -Q "$pkg" >/dev/null 2>&1; then
+      info "✅ $pkg is installed"
+    else
+      warn "❌ $pkg is missing"
+      missing_packages="$missing_packages $pkg"
+    fi
+  done
+  
+  if [[ -n "$missing_packages" ]]; then
+    warn "Critical packages missing: $missing_packages"
+    warn "These may need manual installation after boot"
+  else
+    info "✅ All critical packages verified"
+  fi
+
+  # Clone and setup dotfiles
+  info "=== Setting up Dotfiles ==="
+  
+  # Remove any conflicting auto-generated configs
+  info "Removing potential conflicting configurations..."
+  run_cmd "rm -rf /mnt/home/${username}/.config/hyprland.conf"
+  run_cmd "rm -rf /mnt/home/${username}/.config/hypr/"
+  
+  # Clone dotfiles with force
+  info "Cloning dotfiles repository..."
+  if arch-chroot /mnt bash -c "
+    if [ -d /home/${username}/.dotfiles ]; then
+      rm -rf /home/${username}/.dotfiles
+    fi
+    sudo -u ${username} git clone --force https://github.com/joe-butler-23/.dotfiles /home/${username}/.dotfiles
+  "; then
+    info "✅ Dotfiles cloned successfully"
+    
+    # Run stowall if available, otherwise manual stow
+    if arch-chroot /mnt test -x /home/${username}/.dotfiles/stowall.sh; then
+      info "Running stowall.sh"
+      if arch-chroot /mnt bash -c "cd /home/${username}/.dotfiles && sudo -u ${username} ./stowall.sh"; then
+        info "✅ stowall.sh completed successfully"
+      else
+        warn "stowall.sh encountered errors, trying manual stow"
+        arch-chroot /mnt bash -c "
+          cd /home/${username}/.dotfiles || exit 0
+          for d in */; do
+            if [ -d \"\$d\" ]; then
+              sudo -u ${username} stow --target=/home/${username} --adopt -R \"\${d%/}\" 2>/dev/null || true
+            fi
+          done
+        " && info "✅ Manual stow completed" || warn "Manual stow encountered errors"
+      fi
+    else
+      info "Running manual stow on dotfiles"
+      arch-chroot /mnt bash -c "
+        cd /home/${username}/.dotfiles || exit 0
+        for d in */; do
+          if [ -d \"\$d\" ]; then
+            sudo -u ${username} stow --target=/home/${username} --adopt -R \"\${d%/}\" 2>/dev/null || true
+          fi
+        done
+      " && info "✅ Manual stow completed" || warn "Manual stow encountered errors"
+    fi
+    
+    # Verify key dotfiles were created
+    info "Verifying dotfiles installation..."
+    local dotfiles_ok=true
+    for dotfile in .zshrc .config/hypr/hyprland.conf; do
+      if arch-chroot /mnt test -f /home/${username}/$dotfile; then
+        info "  ✅ $dotfile present"
+      else
+        warn "  ❌ $dotfile missing"
+        dotfiles_ok=false
+      fi
+    done
+    
+    if $dotfiles_ok; then
+      info "✅ Dotfiles verification passed"
+    else
+      warn "⚠️  Some dotfiles are missing - manual setup may be needed"
+    fi
+    
+    # Fix ownership
+    run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.dotfiles"
+    run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.config"
+    
+  else
+    warn "❌ Dotfiles clone failed"
+    warn "After first login, run:"
+    warn "  git clone https://github.com/joe-butler-23/.dotfiles ~/.dotfiles"
+    warn "  cd ~/.dotfiles && ./stowall.sh"
+  fi
+
+  info "✅ All package installation and dotfiles setup completed"
 }
