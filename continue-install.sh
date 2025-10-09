@@ -89,7 +89,7 @@ case "$START_MODULE" in
     ;&  # Fall through to next case
   05)
     info "=== Module 05: Users and Permissions ==="
-    run_users
+    # Note: Module 05 functionality has been integrated into Module 04
     ;&  # Fall through to next case
   06)
     info "=== Module 06: Network Configuration ==="
