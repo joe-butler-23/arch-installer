@@ -4,16 +4,16 @@ run_postinstall() {
   info "=== Post-Install Tasks ==="
 
   
-  # Create .zprofile for auto-starting Hyprland on TTY1
-  info "Configuring Hyprland auto-start..."
+  # Create .zprofile for UWSM auto-start on TTY1
+  info "Configuring UWSM + Hyprland auto-start..."
   cat > /mnt/home/${username}/.zprofile <<'EOF'
-# Auto-start Hyprland on TTY1
-if [ "$(tty)" = "/dev/tty1" ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    exec Hyprland
+# UWSM + Hyprland auto-start on TTY1
+if uwsm check may-start; then
+    exec uwsm start hyprland-uwsm.desktop
 fi
 EOF
   run_cmd "arch-chroot /mnt chown ${username}:${username} /home/${username}/.zprofile"
-  info "✅ Hyprland will auto-start after TTY1 login"
+  info "✅ UWSM + Hyprland will auto-start after TTY1 login"
 
   # Copy verification script to user home if it exists
   if [[ -f verify.sh ]]; then
@@ -101,6 +101,9 @@ Hostname: ${hostname:-archlinux}
 ✅ Tailscale VPN
 ✅ Syncthing file sync
 ✅ Dotfiles stowed
+✅ UWSM session management
+✅ app2unit fast app launching (~0.06s overhead)
+✅ Automatic keyring unlock
 
 === Services Status ===
 Run 'systemctl status' to check all services

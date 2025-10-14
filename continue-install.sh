@@ -75,7 +75,7 @@ if ! arch-chroot /mnt pacman -Q snapper &>/dev/null; then
 fi
 
 # Load and run remaining modules
-for m in modules/04-*.sh modules/05-*.sh modules/06-*.sh modules/07-*.sh modules/08-*.sh; do
+for m in modules/04-*.sh modules/05-*.sh modules/06-*.sh modules/07-*.sh modules/08-*.sh modules/09-*.sh; do
   if [[ -f "$m" ]]; then
     source "$m"
   fi
@@ -102,9 +102,13 @@ case "$START_MODULE" in
   08)
     info "=== Module 08: Post-Installation ==="
     run_postinstall
+    ;&  # Fall through to next case
+  09)
+    info "=== Module 09: UWSM Setup ==="
+    run_uwsm_setup
     ;;
   *)
-    die "Invalid start module: $START_MODULE. Must be 04-08."
+    die "Invalid start module: $START_MODULE. Must be 04-09."
     ;;
 esac
 

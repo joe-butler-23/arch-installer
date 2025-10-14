@@ -9,6 +9,7 @@ doas
 dunst
 fail2ban
 git
+gnome-keyring
 grim
 hyprland
 iwd
@@ -26,6 +27,7 @@ snapper
 stow
 syncthing
 tailscale
+uwsm
 waybar
 wl-clipboard
 wofi
