@@ -22,6 +22,7 @@ mousepad
 networkmanager
 papirus-icon-theme
 polkit-gnome
+ttf-nerd-fonts-symbols
 qt5-wayland
 qt6-wayland
 reflector
