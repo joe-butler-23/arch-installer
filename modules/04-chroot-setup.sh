@@ -12,12 +12,20 @@ run_chroot_setup() {
     info "✅ Root password set"
   fi
 
+  # Ensure supplemental groups exist for Wayland/tty access
+  for grp in video input seat; do
+    run_cmd "arch-chroot /mnt groupadd -f ${grp}"
+  done
+
+  local desktop_groups="wheel,video,input,seat"
+
   if arch-chroot /mnt id "${username}" &>/dev/null; then
     info "User ${username} already exists, updating settings"
-    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh ${username}"
+    run_cmd "arch-chroot /mnt usermod -aG ${desktop_groups} ${username}"
   else
     info "Creating user ${username} with zsh shell"
-    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+    run_cmd "arch-chroot /mnt useradd -m -G ${desktop_groups} -s /bin/zsh ${username}"
   fi
   
   # Set user password from config

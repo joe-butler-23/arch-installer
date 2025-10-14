@@ -27,6 +27,7 @@ qt5-wayland
 qt6-wayland
 reflector
 sbctl
+seatd
 slurp
 snapper
 stow
