@@ -36,6 +36,11 @@ EOF
   run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.config/uwsm"
   info "✅ UWSM environment configured"
   
+  # Configure default icon theme
+  info "Setting default icon theme..."
+  run_cmd "arch-chroot /mnt sudo -u ${username} gsettings set org.gnome.desktop.interface icon-theme 'Papirus'"
+  info "✅ Default icon theme set to Papirus"
+  
   # Create default hyprland desktop entry if needed
   info "Creating Hyprland desktop entry..."
   cat > /mnt/usr/share/applications/hyprland.desktop <<'EOF'

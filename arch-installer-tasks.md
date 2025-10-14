@@ -294,6 +294,14 @@ sbctl enroll-keys -m
 - **Tags**: P2, improvement, uwsm, performance
 - **Verification**: Test app launch speed, verify systemd units created
 
+### ID 41: Add Icon Theme Support
+- **Description**: Add missing icon themes and desktop file utilities for proper icon display
+- **Location**: packages.txt and post-installation configuration
+- **Solution**: Add papirus-icon-theme, hicolor-icon-theme, desktop-file-utils, gtk-update-icon-cache to packages.txt; set default icon theme
+- **Dependencies**: None
+- **Tags**: P2, improvement, icons, desktop
+- **Verification**: Icons display properly in applications and file managers
+
 ## P3 - Low Priority (9 tasks)
 
 ### ID 21: Add Shell Checker in CI
