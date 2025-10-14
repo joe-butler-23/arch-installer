@@ -105,24 +105,53 @@ EOF
   
   # Enroll keys in UEFI firmware (REQUIRED - machine must be in Setup Mode)
   if ! arch-chroot /mnt sbctl enroll-keys -m; then
-    die "Failed to enroll Secure Boot keys. Machine must be in Setup Mode before installation. Please clear all Secure Boot keys in UEFI and restart installation."
-  fi
-  
-  # Sign all existing boot files (with file existence checks)
-  if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}.efi"; then
-    run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
+    warn "Failed to enroll Secure Boot keys. Machine must be in Setup Mode."
+    warn "SECURE BOOT SKIPPED - MUST BE ADDRESSED POST-INSTALL"
+    warn "Post-install steps:"
+    warn "1. Put machine in Setup Mode (clear all Secure Boot keys in UEFI)"
+    warn "2. Run: sudo sbctl enroll-keys -m"
+    warn "3. Run: sudo sbctl sign -s /boot/EFI/Linux/arch-*.efi"
+    warn "4. Reboot and enable Secure Boot in UEFI"
+    
+    # Create a post-install reminder file
+    cat > /mnt/root/SECURE-BOOT-POST-INSTALL.txt <<'EOF'
+SECURE BOOT POST-INSTALL STEPS
+==============================
+
+Secure Boot was skipped during installation because the machine was not in Setup Mode.
+
+To enable Secure Boot:
+
+1. Boot into UEFI/BIOS
+2. Navigate to Secure Boot settings
+3. Clear/Delete all existing Secure Boot keys (puts system in Setup Mode)
+4. Save and exit UEFI
+5. Boot into your installed system
+6. Run: sudo sbctl enroll-keys -m
+7. Run: sudo sbctl sign -s /boot/EFI/Linux/arch-*.efi
+8. Reboot and enable Secure Boot in UEFI
+
+Your system will then boot with Secure Boot enabled.
+EOF
+    info "Created /root/SECURE-BOOT-POST-INSTALL.txt with instructions"
   else
-    warn "UKI file /boot/EFI/Linux/arch-${kernel}.efi not found, skipping signature"
-  fi
-  
-  if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}-fallback.efi"; then
-    run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}-fallback.efi"
-  else
-    warn "UKI fallback file /boot/EFI/Linux/arch-${kernel}-fallback.efi not found, skipping signature"
-  fi
-  
-  # Create sbctl verification service
-  cat > /mnt/etc/systemd/system/sbctl-verify.service <<'EOF'
+    info "Secure Boot keys enrolled successfully"
+    
+    # Sign all existing boot files (with file existence checks)
+    if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}.efi"; then
+      run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
+    else
+      warn "UKI file /boot/EFI/Linux/arch-${kernel}.efi not found, skipping signature"
+    fi
+    
+    if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}-fallback.efi"; then
+      run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}-fallback.efi"
+    else
+      warn "UKI fallback file /boot/EFI/Linux/arch-${kernel}-fallback.efi not found, skipping signature"
+    fi
+    
+    # Create sbctl verification service
+    cat > /mnt/etc/systemd/system/sbctl-verify.service <<'EOF'
 [Unit]
 Description=Verify Secure Boot signatures
 Wants=local-fs.target
@@ -133,7 +162,7 @@ Type=oneshot
 ExecStart=/usr/bin/sbctl verify
 EOF
 
-  cat > /mnt/etc/systemd/system/sbctl-verify.timer <<'EOF'
+    cat > /mnt/etc/systemd/system/sbctl-verify.timer <<'EOF'
 [Unit]
 Description=Run sbctl verification daily
 Requires=sbctl-verify.service
@@ -146,7 +175,9 @@ Persistent=true
 WantedBy=timers.target
 EOF
 
-  run_cmd "arch-chroot /mnt systemctl enable sbctl-verify.timer"
+    run_cmd "arch-chroot /mnt systemctl enable sbctl-verify.timer"
+    info "Secure Boot configured successfully"
+  fi
 
   # Configure CPU power management
   info "Configuring CPU power management"
