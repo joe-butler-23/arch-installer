@@ -23,7 +23,7 @@ git push
 ```
 Always push changes before ending session to ensure work is saved and synchronized.
 
-## P0 - Critical/Blocking (6 tasks)
+## P0 - Critical/Blocking (2 tasks)
 
 ### ID 1: Fix SSH Config Rendering ✅ COMPLETED
 - **Description**: Fix SSH config rendering `${username}` literally due to single-quoted heredocs in run_chroot_setup/run_users
@@ -49,42 +49,6 @@ Always push changes before ending session to ensure work is saved and synchroniz
 - **Tags**: P0, bug, services
 - **Verification**: verify.sh now matches actual installer services (snapper-cleanup.timer, fail2ban)
 
-### ID 29: Fix GRUB LUKS UUID Reference
-- **Description**: GRUB cmdline must reference current LUKS UUID dynamically
-- **Location**: GRUB configuration module
-- **Solution**: Replace one-shot sed with robust write each run:
-```bash
-luks_uuid=$(blkid -s UUID -o value "$CRYPTROOT")
-cat > /mnt/etc/default/grub <<EOF
-GRUB_DEFAULT=0
-GRUB_TIMEOUT=3
-GRUB_TIMEOUT_STYLE=menu
-GRUB_DISTRIBUTOR="Arch"
-GRUB_CMDLINE_LINUX="rd.luks.name=${luks_uuid}=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw quiet loglevel=3 apparmor=1 lsm=landlock,lockdown,yama,apparmor,bpf"
-EOF
-```
-- **Dependencies**: None
-- **Tags**: P0, boot, grub
-- **Verification**: Check GRUB config has correct UUID
-
-### ID 30: Fix Boot Order - Initramfs Before GRUB Config
-- **Description**: Always rebuild initramfs after writing /etc/default/grub
-- **Location**: Boot configuration module
-- **Solution**: Order: mkinitcpio -P → grub-mkconfig
-- **Dependencies**: ID 29
-- **Tags**: P0, boot, initramfs
-- **Verification**: Boot system successfully
-
-### ID 31: Verify EFI Boot Entry Creation
-- **Description**: Add check that EFI boot entry exists
-- **Location**: Boot configuration module
-- **Solution**: Fail loudly if missing:
-```bash
-efibootmgr | grep -q "GRUB" || { echo "ERROR: No EFI boot entry created"; exit 1; }
-```
-- **Dependencies**: ID 30
-- **Tags**: P0, boot, efi
-- **Verification**: EFI boot entry exists
 
 ### ID 35: Fix Fail2ban for Arch ✅ COMPLETED
 - **Description**: Current config uses Debian-style /var/log/auth.log, switch to systemd backend
@@ -94,21 +58,8 @@ efibootmgr | grep -q "GRUB" || { echo "ERROR: No EFI boot entry created"; exit 1
 - **Tags**: P0, security, fail2ban
 - **Verification**: Fail2ban now configured with systemd backend and proper jail settings
 
-### ID 38: Add Safety Checks Before Completion
-- **Description**: Verify grub.cfg exists and EFI boot entry before completion
-- **Location**: End of installation script
-- **Solution**: Add verification block:
-```bash
-set -e
-arch-chroot /mnt grub-probe /boot >/dev/null
-[ -f /mnt/boot/grub/grub.cfg ] || { echo "ERROR: Missing grub.cfg"; exit 1; }
-efibootmgr | grep -q GRUB || { echo "ERROR: No EFI boot entry"; exit 1; }
-```
-- **Dependencies**: ID 31
-- **Tags**: P0, safety, verification
-- **Verification**: Installation completes with all checks passing
 
-## P1 - High Priority (12 tasks)
+## P1 - High Priority (9 tasks)
 
 ### ID 4: Handle AppArmor Gracefully ✅ COMPLETED
 - **Description**: Handle AppArmor gracefully when aa-status absent
@@ -182,7 +133,7 @@ efibootmgr | grep -q GRUB || { echo "ERROR: No EFI boot entry"; exit 1; }
 - **Tags**: P1, improvement, locale
 - **Verification**: Locale setup now works reliably with proper existence checks
 
-## P2 - Medium Priority (12 tasks)
+## P2 - Medium Priority (9 tasks)
 
 ### ID 12: Improve Secure Boot Flow ✅ COMPLETED
 - **Description**: Move "setup mode" to pre-install; remove from post-install - need to put machine into setup mode BEFORE starting installation
