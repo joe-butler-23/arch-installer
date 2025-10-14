@@ -108,9 +108,18 @@ EOF
     die "Failed to enroll Secure Boot keys. Machine must be in Setup Mode before installation. Please clear all Secure Boot keys in UEFI and restart installation."
   fi
   
-  # Sign all existing boot files
-  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
-  run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}-fallback.efi"
+  # Sign all existing boot files (with file existence checks)
+  if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}.efi"; then
+    run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}.efi"
+  else
+    warn "UKI file /boot/EFI/Linux/arch-${kernel}.efi not found, skipping signature"
+  fi
+  
+  if arch-chroot /mnt test -f "/boot/EFI/Linux/arch-${kernel}-fallback.efi"; then
+    run_cmd "arch-chroot /mnt sbctl sign -s /boot/EFI/Linux/arch-${kernel}-fallback.efi"
+  else
+    warn "UKI fallback file /boot/EFI/Linux/arch-${kernel}-fallback.efi not found, skipping signature"
+  fi
   
   # Create sbctl verification service
   cat > /mnt/etc/systemd/system/sbctl-verify.service <<'EOF'

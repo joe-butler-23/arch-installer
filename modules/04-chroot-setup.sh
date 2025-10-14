@@ -88,6 +88,10 @@ EOF
 rd.luks.name=${luks_uuid}=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw quiet loglevel=3 apparmor=1 lsm=landlock,lockdown,yama,apparmor,bpf
 EOF
 
+  # Create crypttab for LUKS management
+  info "Creating /etc/crypttab for LUKS management"
+  echo "cryptroot UUID=${luks_uuid} none luks,discard" > /mnt/etc/crypttab
+
   # Configure UKI presets
   cat > /mnt/etc/mkinitcpio.d/${kernel}.preset <<EOF
 ALL_config="/etc/mkinitcpio.conf"

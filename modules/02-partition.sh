@@ -52,10 +52,11 @@ run_partition() {
     mkpart ESP fat32 1MiB 1GiB set 1 esp on \
     mkpart CRYPTROOT 1GiB 100%"
 
-  # NOW force kernel to reread the NEW partition table
+  # Wait for udev to settle and force kernel to reread partition table
   info "Refreshing partition table"
-  partprobe "$disk" 2>/dev/null || true
-  blockdev --rereadpt "$disk" 2>/dev/null || true
+  run_cmd "udevadm settle"
+  run_cmd "partprobe $disk"
+  run_cmd "sleep 2"
   
   # Wait for partition devices to appear
   sleep 2

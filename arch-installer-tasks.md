@@ -150,43 +150,29 @@ efibootmgr | grep -q GRUB || { echo "ERROR: No EFI boot entry"; exit 1; }
 - **Tags**: P3, research, documentation
 - **Verification**: All research questions documented with findings and recommendations
 
-### ID 32: Add /etc/crypttab
+### ID 32: Add /etc/crypttab ✅ COMPLETED
 - **Description**: Optional but nice for LUKS management
 - **Location**: LUKS configuration module
-- **Solution**: Add crypttab entry:
-```bash
-echo "cryptroot UUID=${luks_uuid} none luks,discard"
-```
+- **Solution**: Added crypttab entry with UUID and discard option in modules/04-chroot-setup.sh
 - **Dependencies**: ID 29
 - **Tags**: P1, improvement, luks
-- **Verification**: crypttab exists and is correct
+- **Verification**: crypttab now exists with correct UUID and discard option for SSD performance
 
-### ID 34: Fix Partitioning Race Conditions
+### ID 34: Fix Partitioning Race Conditions ✅ COMPLETED
 - **Description**: Add udevadm settle + partprobe + sleep after parted
 - **Location**: Partitioning module
-- **Solution**: Add after parted:
-```bash
-udevadm settle
-partprobe "$DISK"
-sleep 2
-```
+- **Solution**: Added udevadm settle, partprobe, and sleep after parted in modules/02-partition.sh
 - **Dependencies**: None
 - **Tags**: P1, improvement, partitioning
-- **Verification**: Partitioning works reliably
+- **Verification**: Partitioning now works reliably with proper udev synchronization
 
-### ID 36: Add Robust sbctl Signing
+### ID 36: Add Robust sbctl Signing ✅ COMPLETED
 - **Description**: Guard signing commands with file existence checks
 - **Location**: Secure Boot module
-- **Solution**: Add guards:
-```bash
-sbctl create-keys
-sbctl enroll-keys -m
-[ -f /boot/EFI/GRUB/grubx64.efi ] && sbctl sign -s /boot/EFI/GRUB/grubx64.efi || true
-[ -f /boot/vmlinuz-${kernel} ] && sbctl sign -s /boot/vmlinuz-${kernel} || true
-```
+- **Solution**: Added file existence checks before signing UKI files in modules/07-services.sh
 - **Dependencies**: None
 - **Tags**: P1, improvement, secure-boot
-- **Verification**: Signing works without errors
+- **Verification**: Secure Boot signing now works without errors even if files are missing
 
 ### ID 37: Add locale.gen Guard ✅ COMPLETED
 - **Description**: Prevent failures if locale line doesn't exist
