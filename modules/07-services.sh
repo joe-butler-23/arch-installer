@@ -4,13 +4,14 @@ run_services() {
   info "=== Services & Hardening ==="
 
   # Base security + power + bluetooth + zram + secure boot + additional tools
-  PKGS="apparmor fail2ban tlp tlp-rdw bluez bluez-utils zram-generator sbctl cpupower reflector"
+  PKGS="apparmor fail2ban tlp tlp-rdw bluez bluez-utils zram-generator sbctl seatd cpupower reflector"
   run_cmd "arch-chroot /mnt pacman -S --needed --noconfirm ${PKGS}"
 
   # Enable essential services
   SERVICES=(
     systemd-networkd.service systemd-resolved.service iwd.service
     apparmor.service fail2ban.service tlp.service bluetooth.service
+    seatd.service
   )
   for s in "${SERVICES[@]}"; do
     run_cmd "arch-chroot /mnt systemctl enable $s || true"
