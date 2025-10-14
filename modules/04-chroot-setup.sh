@@ -35,7 +35,7 @@ run_chroot_setup() {
 
   # SSH hardening
   info "Configuring SSH hardening"
-  cat > /mnt/etc/ssh/sshd_config <<'EOF'
+  cat > /mnt/etc/ssh/sshd_config <<EOF
 # SSH hardening configuration
 Port 22
 Protocol 2

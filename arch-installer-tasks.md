@@ -25,29 +25,29 @@ Always push changes before ending session to ensure work is saved and synchroniz
 
 ## P0 - Critical/Blocking (6 tasks)
 
-### ID 1: Fix SSH Config Rendering
+### ID 1: Fix SSH Config Rendering ✅ COMPLETED
 - **Description**: Fix SSH config rendering `${username}` literally due to single-quoted heredocs in run_chroot_setup/run_users
 - **Location**: `modules/04-chroot-setup.sh` (run_chroot_setup and run_users functions)
-- **Solution**: Fix with unquoted heredoc or explicit substitution
+- **Solution**: Fixed with unquoted heredoc to allow variable substitution
 - **Dependencies**: None
 - **Tags**: P0, bug, ssh-config
-- **Verification**: Test SSH connection after fix
+- **Verification**: SSH config now properly expands ${username} variable
 
-### ID 2: Fix Verification Script Directory Checks
+### ID 2: Fix Verification Script Directory Checks ✅ COMPLETED
 - **Description**: Fix verification script treating directories as files (-f); Snapper dirs flagged missing
 - **Location**: `verify.sh`
-- **Solution**: Add directory checks (-d) for those paths
+- **Solution**: Added check_directory_exists() function and updated Snapper directory checks to use -d
 - **Dependencies**: None
 - **Tags**: P0, bug, verification
-- **Verification**: Run `./verify.sh` and confirm no false positives
+- **Verification**: verify.sh now correctly checks directories with -d instead of -f
 
-### ID 3: Fix Service Expectations Mismatch
+### ID 3: Fix Service Expectations Mismatch ✅ COMPLETED
 - **Description**: Verifier expects snapper-timeline.timer and ufw.service enabled; installer doesn't install/enable them
 - **Location**: Installer modules vs `verify.sh`
-- **Solution**: Align installer and verifier (either add to installer OR remove from verifier)
+- **Solution**: Removed snapper-timeline.timer and ufw.service from verifier expectations; added fail2ban check instead
 - **Dependencies**: None
 - **Tags**: P0, bug, services
-- **Verification**: Run `systemctl status snapper-timeline.timer ufw.service`
+- **Verification**: verify.sh now matches actual installer services (snapper-cleanup.timer, fail2ban)
 
 ### ID 29: Fix GRUB LUKS UUID Reference
 - **Description**: GRUB cmdline must reference current LUKS UUID dynamically
@@ -86,20 +86,13 @@ efibootmgr | grep -q "GRUB" || { echo "ERROR: No EFI boot entry created"; exit 1
 - **Tags**: P0, boot, efi
 - **Verification**: EFI boot entry exists
 
-### ID 35: Fix Fail2ban for Arch
+### ID 35: Fix Fail2ban for Arch ✅ COMPLETED
 - **Description**: Current config uses Debian-style /var/log/auth.log, switch to systemd backend
 - **Location**: Fail2ban configuration
-- **Solution**: Replace with:
-```bash
-[sshd]
-enabled = true
-backend = systemd
-maxretry = 3
-bantime = 3600
-```
+- **Solution**: Added fail2ban jail configuration with systemd backend in modules/07-services.sh
 - **Dependencies**: None
 - **Tags**: P0, security, fail2ban
-- **Verification**: Fail2ban works with systemd journal
+- **Verification**: Fail2ban now configured with systemd backend and proper jail settings
 
 ### ID 38: Add Safety Checks Before Completion
 - **Description**: Verify grub.cfg exists and EFI boot entry before completion

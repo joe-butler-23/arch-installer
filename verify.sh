@@ -55,6 +55,19 @@ check_file_exists() {
     fi
 }
 
+check_directory_exists() {
+    local dir=$1
+    local description=$2
+    
+    if [[ -d "$dir" ]]; then
+        success "$description exists"
+        return 0
+    else
+        error "$description is missing"
+        return 1
+    fi
+}
+
 verify_disk_layout() {
     info "=== Verifying Disk Layout ==="
     
@@ -92,11 +105,10 @@ verify_snapper() {
     
     check_file_exists "/etc/snapper/configs/root" "Snapper root configuration"
     check_file_exists "/etc/snapper/configs/home" "Snapper home configuration"
-    check_file_exists "/.snapshots" "Root snapshots directory"
-    check_file_exists "/home/.snapshots" "Home snapshots directory"
+    check_directory_exists "/.snapshots" "Root snapshots directory"
+    check_directory_exists "/home/.snapshots" "Home snapshots directory"
     
     # Check Snapper services
-    check_service "snapper-timeline.timer" "Snapper timeline timer"
     check_service "snapper-cleanup.timer" "Snapper cleanup timer"
     
     # Check if snapshots exist
@@ -159,7 +171,6 @@ verify_services() {
     check_service "systemd-networkd.service" "Systemd networkd"
     check_service "systemd-resolved.service" "Systemd resolved"
     check_service "iwd.service" "iwd wireless service"
-    check_service "ufw.service" "UFW firewall"
     check_service "apparmor.service" "AppArmor security framework"
     check_service "fail2ban.service" "Fail2ban intrusion prevention"
     check_service "tlp.service" "TLP power management"
@@ -171,18 +182,18 @@ verify_services() {
 verify_network_security() {
     info "=== Verifying Network Security ==="
     
-    # Check UFW status
-    if ufw status | grep -q "Status: active"; then
-        success "UFW firewall is active"
-    else
-        error "UFW firewall is not active"
-    fi
-    
     # Check AppArmor status
     if aa-status 2>/dev/null | grep -q "profiles are loaded"; then
         success "AppArmor profiles are loaded"
     else
         error "AppArmor profiles are not loaded"
+    fi
+    
+    # Check fail2ban status
+    if systemctl is-active fail2ban &>/dev/null; then
+        success "Fail2ban service is active"
+    else
+        error "Fail2ban service is not active"
     fi
 }
 

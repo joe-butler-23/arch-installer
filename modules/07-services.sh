@@ -19,6 +19,18 @@ run_services() {
   info "Configuring AppArmor"
   run_cmd "arch-chroot /mnt systemctl enable apparmor"
 
+  # Configure fail2ban for SSH protection
+  info "Configuring fail2ban for SSH"
+  run_cmd "mkdir -p /mnt/etc/fail2ban/jail.d"
+  cat > /mnt/etc/fail2ban/jail.d/sshd.local <<'EOF'
+[sshd]
+enabled = true
+backend = systemd
+maxretry = 3
+bantime = 3600
+findtime = 600
+EOF
+
   # Configure ZRAM
   info "Configuring ZRAM for compressed swap"
   cat > /mnt/etc/systemd/zram-generator.conf <<'EOF'
