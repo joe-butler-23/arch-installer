@@ -12,20 +12,12 @@ run_chroot_setup() {
     info "✅ Root password set"
   fi
 
-  # Ensure supplemental groups exist for Wayland/tty access
-  for grp in video input seat; do
-    run_cmd "arch-chroot /mnt groupadd -f ${grp}"
-  done
-
-  local desktop_groups="wheel,video,input,seat"
-
   if arch-chroot /mnt id "${username}" &>/dev/null; then
     info "User ${username} already exists, updating settings"
-    run_cmd "arch-chroot /mnt usermod -s /bin/zsh ${username}"
-    run_cmd "arch-chroot /mnt usermod -aG ${desktop_groups} ${username}"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
   else
     info "Creating user ${username} with zsh shell"
-    run_cmd "arch-chroot /mnt useradd -m -G ${desktop_groups} -s /bin/zsh ${username}"
+    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
   fi
   
   # Set user password from config
@@ -365,16 +357,42 @@ EOF
       warn "⚠️  Some dotfiles are missing - manual setup may be needed"
     fi
     
-    # Fix ownership
-    run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.dotfiles"
-    run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.config"
-    
+  # Fix ownership
+  run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.dotfiles"
+  run_cmd "arch-chroot /mnt chown -R ${username}:${username} /home/${username}/.config"
+  
+else
+  warn "❌ Dotfiles clone failed"
+  warn "After first login, run:"
+  warn "  git clone https://github.com/joe-butler-23/.dotfiles ~/.dotfiles"
+  warn "  cd ~/.dotfiles && ./stowall.sh"
+fi
+
+  # Install app2unit for fast UWSM application launching
+  info "=== Installing app2unit ==="
+  
+  # Clone and install app2unit
+  info "Cloning app2unit repository..."
+  if arch-chroot /mnt bash -c "
+    cd /tmp
+    git clone https://github.com/waycrate/app2unit.git
+    cd app2unit
+    make install
+    cd /
+    rm -rf /tmp/app2unit
+  "; then
+    info "✅ app2unit installed successfully"
   else
-    warn "❌ Dotfiles clone failed"
-    warn "After first login, run:"
-    warn "  git clone https://github.com/joe-butler-23/.dotfiles ~/.dotfiles"
-    warn "  cd ~/.dotfiles && ./stowall.sh"
+    warn "❌ app2unit installation failed"
+    warn "This may cause issues with UWSM application launching"
+  fi
+  
+  # Verify app2unit installation
+  if arch-chroot /mnt which app2unit >/dev/null 2>&1; then
+    info "✅ app2unit verified and available"
+  else
+    warn "❌ app2unit not found in PATH"
   fi
 
-  info "✅ All package installation and dotfiles setup completed"
+info "✅ All package installation and dotfiles setup completed"
 }
