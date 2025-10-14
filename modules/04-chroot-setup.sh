@@ -5,25 +5,56 @@ run_chroot_setup() {
 
   # User and SSH Configuration
   info "=== User and SSH Configuration ==="
-  
+
+  local secret_dir="/mnt/root/.installer-secrets"
+  local created_secret_dir=false
+  if [[ -n "${root_password:-}" || -n "${user_password:-}" ]]; then
+    run_cmd "install -d -m 700 ${secret_dir}"
+    created_secret_dir=true
+  fi
+
   # Set root password from config (already collected in step 1)
   if [[ -n "${root_password:-}" ]]; then
-    run_cmd "echo 'root:${root_password}' | arch-chroot /mnt chpasswd"
+    local root_passwd_file
+    root_passwd_file=$(mktemp)
+    printf 'root:%s\n' "${root_password}" >"${root_passwd_file}"
+    run_cmd "install -m 600 ${root_passwd_file} ${secret_dir}/root.passwd"
+    run_cmd "arch-chroot /mnt chpasswd < /root/.installer-secrets/root.passwd"
+    run_cmd "arch-chroot /mnt rm -f /root/.installer-secrets/root.passwd"
+    rm -f "${root_passwd_file}"
     info "✅ Root password set"
   fi
 
+  # Ensure supplemental groups exist for Wayland/tty access
+  for grp in video input seat; do
+    run_cmd "arch-chroot /mnt groupadd -f ${grp}"
+  done
+
+  local desktop_groups="wheel,video,input,seat"
+
   if arch-chroot /mnt id "${username}" &>/dev/null; then
     info "User ${username} already exists, updating settings"
-    run_cmd "arch-chroot /mnt usermod -s /bin/zsh -G wheel ${username}"
+    run_cmd "arch-chroot /mnt usermod -s /bin/zsh ${username}"
+    run_cmd "arch-chroot /mnt usermod -aG ${desktop_groups} ${username}"
   else
     info "Creating user ${username} with zsh shell"
-    run_cmd "arch-chroot /mnt useradd -m -G wheel -s /bin/zsh ${username}"
+    run_cmd "arch-chroot /mnt useradd -m -G ${desktop_groups} -s /bin/zsh ${username}"
   fi
   
   # Set user password from config
   if [[ -n "${user_password:-}" ]]; then
-    run_cmd "echo '${username}:${user_password}' | arch-chroot /mnt chpasswd"
+    local user_passwd_file
+    user_passwd_file=$(mktemp)
+    printf '%s:%s\n' "${username}" "${user_password}" >"${user_passwd_file}"
+    run_cmd "install -m 600 ${user_passwd_file} ${secret_dir}/user.passwd"
+    run_cmd "arch-chroot /mnt chpasswd < /root/.installer-secrets/user.passwd"
+    run_cmd "arch-chroot /mnt rm -f /root/.installer-secrets/user.passwd"
+    rm -f "${user_passwd_file}"
     info "✅ User password set"
+  fi
+
+  if [[ "${created_secret_dir}" == true ]]; then
+    run_cmd "arch-chroot /mnt rm -rf /root/.installer-secrets"
   fi
   
   # sudo + doas configuration
