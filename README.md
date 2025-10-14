@@ -13,6 +13,18 @@ A complete, modular Arch Linux installation system with full-disk encryption, Bt
 *   Internet connection (Wi-Fi or Ethernet)
 *   Another computer for SSH access
 
+### Secure Boot Setup (Required)
+
+**IMPORTANT**: Before starting installation, you must put your machine in Secure Boot Setup Mode:
+
+1. **Boot into UEFI/BIOS** (usually Del, F2, or F12 during boot)
+2. **Navigate to Secure Boot settings**
+3. **Delete/Clear all existing Secure Boot keys** - This puts the system in "Setup Mode"
+4. **Save and exit** UEFI
+5. **Boot the Arch ISO** and proceed with installation
+
+The installer will automatically create and enroll new Secure Boot keys during installation.
+
 ### Boot the Arch ISO
 
 1.  Download the latest Arch Linux ISO from https://archlinux.org/download/
@@ -182,21 +194,9 @@ reboot
 
 ## 🎯 Post-Installation Setup
 
-### Configure Secure Boot 
-
-Secure Boot keys were created during installation but need to be enrolled:
-
-1.  **Reboot** and enter UEFI/BIOS (usually Del, F2, or F12 during boot)
-2.  **Navigate to Secure Boot settings**
-3.  **Delete/Clear all Secure Boot keys** - This puts the system in "Setup Mode"
-4.  **Save and exit** UEFI
-5.  **Boot into Arch Linux**
-6.  **Enroll the keys**:
-7.  **Reboot** and enter UEFI again
-8.  **Enable Secure Boot**
-9.  **Boot into Arch** - System will boot with Secure Boot enabled
-
 ### Verify Secure Boot Status
+
+Secure Boot keys were automatically created and enrolled during installation:
 
 ```
 # Check if Secure Boot is enabled

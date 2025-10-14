@@ -202,13 +202,13 @@ sed -i "s/^#\(${locale} .*\)/\1/" /etc/locale.gen
 
 ## P2 - Medium Priority (12 tasks)
 
-### ID 12: Improve Secure Boot Flow
+### ID 12: Improve Secure Boot Flow ✅ COMPLETED
 - **Description**: Move "setup mode" to pre-install; remove from post-install - need to put machine into setup mode BEFORE starting installation
 - **Location**: Documentation and Secure Boot module
-- **Solution**: Restructure Secure Boot setup process - put machine in setup mode before installation starts
+- **Solution**: Added pre-installation Secure Boot setup instructions to README.md; made key enrollment mandatory in installer; removed post-installation manual steps
 - **Dependencies**: None
 - **Tags**: P2, improvement, secure-boot
-- **Verification**: Test new flow, update docs
+- **Verification**: Installation now requires Setup Mode before starting; Secure Boot works immediately after installation
 
 ### ID 13: Capture Bluetooth Configs
 - **Description**: Config preservation: capture Bluetooth configs
