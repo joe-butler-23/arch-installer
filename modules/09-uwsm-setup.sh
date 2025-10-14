@@ -14,7 +14,24 @@ run_uwsm_setup() {
   info "Creating UWSM configuration..."
   run_cmd "mkdir -p /mnt/home/${username}/.config/uwsm/env"
   run_cmd "mkdir -p /mnt/home/${username}/.config/uwsm/projects"
-  
+
+  # Create Hyprland session definition for UWSM
+  cat > /mnt/home/${username}/.config/uwsm/projects/hyprland-uwsm.desktop <<'EOF'
+[Desktop Entry]
+Name=Hyprland (UWSM)
+Comment=Hyprland session managed by UWSM
+Type=Application
+Exec=Hyprland
+TryExec=Hyprland
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;
+X-UWSM-Session-Type=wayland
+EOF
+
+  # Also install the session definition system-wide so it is available to login managers
+  run_cmd "mkdir -p /mnt/usr/share/uwsm/projects"
+  run_cmd "cp /mnt/home/${username}/.config/uwsm/projects/hyprland-uwsm.desktop /mnt/usr/share/uwsm/projects/hyprland-uwsm.desktop"
+
   # Create UWSM environment configuration
   cat > /mnt/home/${username}/.config/uwsm/env/default <<'EOF'
 # GNOME Keyring environment for UWSM
