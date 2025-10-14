@@ -183,10 +183,14 @@ verify_network_security() {
     info "=== Verifying Network Security ==="
     
     # Check AppArmor status
-    if aa-status 2>/dev/null | grep -q "profiles are loaded"; then
-        success "AppArmor profiles are loaded"
+    if command -v aa-status &>/dev/null; then
+        if aa-status 2>/dev/null | grep -q "profiles are loaded"; then
+            success "AppArmor profiles are loaded"
+        else
+            error "AppArmor profiles are not loaded"
+        fi
     else
-        error "AppArmor profiles are not loaded"
+        warning "AppArmor is not installed (aa-status not found)"
     fi
     
     # Check fail2ban status

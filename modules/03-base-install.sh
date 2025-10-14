@@ -20,7 +20,12 @@ run_base_install() {
   echo "${hostname:-archlinux}" > /mnt/etc/hostname
   echo "LANG=${locale:-en_GB.UTF-8}" > /mnt/etc/locale.conf
   echo "KEYMAP=${keyboard_layout:-uk}" > /mnt/etc/vconsole.conf
-  run_cmd "sed -i 's/^#${locale}/${locale}/' /mnt/etc/locale.gen || echo '${locale:-en_GB.UTF-8} UTF-8' >> /mnt/etc/locale.gen"
+  # Configure locale with proper guards
+  local target_locale="${locale:-en_GB.UTF-8}"
+  if ! grep -q "^${target_locale} " /mnt/etc/locale.gen; then
+    run_cmd "echo '${target_locale} UTF-8' >> /mnt/etc/locale.gen"
+  fi
+  run_cmd "sed -i 's/^#${target_locale}/${target_locale}/' /mnt/etc/locale.gen"
   run_cmd "arch-chroot /mnt locale-gen"
 
   info "Linking timezone"

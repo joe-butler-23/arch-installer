@@ -234,7 +234,10 @@ EOF
 
   # Configure pacman candy and other tweaks
   info "Configuring pacman improvements"
-  cat >> /mnt/etc/pacman.conf <<'EOF'
+  
+  # Check if pacman improvements are already configured
+  if ! grep -q "ILoveCandy" /mnt/etc/pacman.conf; then
+    cat >> /mnt/etc/pacman.conf <<'EOF'
 
 # Color output
 Color
@@ -246,6 +249,9 @@ ILoveCandy
 # Parallel downloads
 ParallelDownloads = 5
 EOF
+  else
+    info "Pacman improvements already configured"
+  fi
 
   # Enable additional services
   ADDITIONAL_SERVICES=(
